@@ -20,4 +20,4 @@ class PlanetarySystem:
     def distance(self, destination_planet):
         return int(4 * sqrt(
             (self.x - destination_planet.x) * (self.x - destination_planet.x) + (self.y - destination_planet.y) * (
-                        self.y - destination_planet.y) / 4))
+                    self.y - destination_planet.y) / 4))
