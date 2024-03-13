@@ -6,7 +6,7 @@ from IPython.display import clear_output
 from galaxy import Galaxy
 from player import Player
 from galaxy_plot import create_plot
-
+import galaxy_map
 
 class Game:
     def __init__(self):
@@ -20,6 +20,7 @@ class Game:
         new_galaxy.create_matches()
         player = Player(new_galaxy)
         create_plot(new_galaxy)
+        galaxy_map.draw(new_galaxy, self.screen)
 
         running = True
         while running:
