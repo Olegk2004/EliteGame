@@ -25,5 +25,5 @@ class Galaxy:
             self.matches[i] = []
             for j in self.systems:
                 if i != j:
-                    if i.distance(j) < 65:
+                    if i.distance_to(j) < 65:
                         self.matches[i].append(j)

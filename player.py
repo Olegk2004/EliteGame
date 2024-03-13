@@ -8,7 +8,7 @@ class Player:
         self.fuel = 1000
 
     def jump(self, destination):
-        now_distance = self.current_planet.distance(destination)
+        now_distance = self.current_planet.distance_to(destination)
         if now_distance <= self.fuel:
             self.fuel -= now_distance
             self.current_planet = destination

@@ -17,7 +17,7 @@ class PlanetarySystem:
         self.goatsoupseed = FastSeedType(0, 0, 0, 0)
         self.name = ""
 
-    def distance(self, destination_planet):
+    def distance_to(self, destination_planet):
         return int(4 * sqrt(
             (self.x - destination_planet.x) * (self.x - destination_planet.x) + (self.y - destination_planet.y) * (
                     self.y - destination_planet.y) / 4))

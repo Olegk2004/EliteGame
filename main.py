@@ -11,7 +11,7 @@ from galaxy_plot import create_plot
 class Game:
     def __init__(self):
         pygame.init()
-        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Super Elite Game")
 
     def run(self):
@@ -46,7 +46,7 @@ class Game:
                     len(available)):  # проходимся по номерам планет, на которые мы можем прыгнуть и добавляем под ключом
                 # номера имя планеты
                 available_planets[str(i)] = available[i]
-                print(f"{i}. {available[i].name}, необходимо иметь топлива: {player.current_planet.distance(available[i])}")
+                print(f"{i}. {available[i].name}, необходимо иметь топлива: {player.current_planet.distance_to(available[i])}")
             planet = input("Введите номер планеты на которую хотите прыгнуть: ")
             is_true = player.jump(available_planets[planet])
             clear_output(wait=False)  # пока что не работает
