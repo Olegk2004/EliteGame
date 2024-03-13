@@ -21,7 +21,7 @@ class Game:
         new_galaxy.create_matches()
         player = Player(new_galaxy)
         create_plot(new_galaxy)
-        galaxy_map.draw(new_galaxy, self.screen)
+        galaxy_map.draw(new_galaxy, player, self.screen)
 
         running = True
         while running:
@@ -33,30 +33,17 @@ class Game:
                     running = False
                     pygame.quit()
                     sys.exit()
-            # Функция для запуска очередного "цикла" игрового процесса, я хз пока куда это положить, поэтому будет здесь
-            print(f"Вы находитесь на планете:{player.current_planet.name}")
-            print(
-                f"На вас напали космические пираты! У вас отняли {player.current_planet.pirates_value} литра топлива.")
-            print(
-                f"Вы обнаружили заправочную станцию! Вы заправились на {player.current_planet.fuel_station_value} литра топлива.")
-            player.fuel -= player.current_planet.pirates_value  # уменьшаем количество топлива на то, которое у нас отобрали пираты
-            player.fuel += player.current_planet.fuel_station_value  # увеличиваем количество топлива на то, что мы нашли на станции
-            print(f"У вас {player.fuel} литров топлива")
-            print(f"вы можете прыгнуть на планеты:")
-            available = player.galaxy.matches[
-                player.current_planet]  # список планет, на которые мы можем допрыгнуть с текущей
-            available_planets = {}  # словарь чтобы пользователь мог вводить планету на которую хочет прыгнуть с помощью цифры
-            for i in range(
-                    len(available)):  # проходимся по номерам планет, на которые мы можем прыгнуть и добавляем под ключом
-                # номера имя планеты
-                available_planets[str(i)] = available[i]
-                print(
-                    f"{i}. {available[i].name}, необходимо иметь топлива: {player.current_planet.distance_to(available[i])}")
-            planet = input("Введите номер планеты на которую хотите прыгнуть: ")
-            is_true = player.jump(available_planets[planet])
-            clear_output(wait=False)  # пока что не работает
-            if not is_true:  # если прыжок совершить невозможно
-                print("У вас недостаточно топлива для данного прыжка")
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:  # Если нажата левая кнопка мыши
+                        print("Нажатаааааааааааааааааааааааааааааааааааааа")
+                        click_pos = pygame.mouse.get_pos()
+                        clicked_planet = galaxy_map.check_click(click_pos, player, new_galaxy)
+                        if clicked_planet:
+                            print("11111111111111111111111111111111")
+                            player.jump(clicked_planet)
+                            self.screen.fill((0, 0, 0))
+                            galaxy_map.draw(new_galaxy, player, self.screen)
+
 
 
 if __name__ == '__main__':

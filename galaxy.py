@@ -1,5 +1,7 @@
 from seed import SeedType
 from system_generator import makesystem
+import settings
+from math import sqrt
 
 PAIRS = "..LEXEGEZACEBISOUSESARMAINDIREA.ERATENBERALAVETIEDORQUANTEISRION"
 
@@ -25,5 +27,5 @@ class Galaxy:
             self.matches[i] = []
             for j in self.systems:
                 if i != j:
-                    if i.distance_to(j) < 65:
+                    if i.distance_to(j) < (65 / sqrt(253 ** 2 + 253 ** 2) * sqrt(settings.SCREEN_WIDTH**2 + settings.SCREEN_HEIGHT ** 2)):
                         self.matches[i].append(j)
