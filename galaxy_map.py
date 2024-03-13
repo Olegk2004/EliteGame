@@ -8,7 +8,7 @@ def draw(galaxy, surface):
     for system in galaxy.systems:
         x = system.x / 260 * settings.SCREEN_WIDTH + 5
         y = system.y / 260 * settings.SCREEN_HEIGHT + 5
-        pygame.draw.circle(surface, [0, 255, 0], (x, y), 4)
+        pygame.draw.circle(surface, settings.PLANETS_COLOR, (x, y), 4)
     for match in galaxy.matches:
         curr_x = match.x / 260 * settings.SCREEN_WIDTH + 5
         curr_y = match.y / 260 * settings.SCREEN_HEIGHT + 5
