@@ -35,11 +35,9 @@ class Game:
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Если нажата левая кнопка мыши
-                        print("Нажатаааааааааааааааааааааааааааааааааааааа")
                         click_pos = pygame.mouse.get_pos()
                         clicked_planet = galaxy_map.check_click(click_pos, player, new_galaxy)
                         if clicked_planet:
-                            print("11111111111111111111111111111111")
                             player.jump(clicked_planet)
                             self.screen.fill((0, 0, 0))
                             galaxy_map.draw(new_galaxy, player, self.screen)
