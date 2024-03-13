@@ -12,6 +12,11 @@ import galaxy_map
 class Game:
     def __init__(self):
         pygame.init()
+
+        pygame.mixer.init()
+        pygame.mixer.music.load('elite_game_cbl_ambient.wav')
+        pygame.mixer.music.set_volume(0.5)
+
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Super Elite Game")
 
@@ -23,6 +28,7 @@ class Game:
         create_plot(new_galaxy)
         galaxy_map.draw(new_galaxy, player, self.screen)
 
+        pygame.mixer.music.play(-1)
         running = True
         while running:
 
@@ -41,7 +47,6 @@ class Game:
                             player.jump(clicked_planet)
                             self.screen.fill((0, 0, 0))
                             galaxy_map.draw(new_galaxy, player, self.screen)
-
 
 
 if __name__ == '__main__':
