@@ -30,6 +30,7 @@ class Game:
         pygame.mixer.music.play(-1)
         running = True
         while running:
+            music_is_muted = False
             map = Map(new_galaxy, player)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -43,6 +44,15 @@ class Game:
                         if clicked_planet:
                             player.jump(clicked_planet)
                             self.screen.fill((0, 0, 0))
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_M:
+                        if music_is_muted:
+                            pygame.mixer.music.set_volume(0.5)
+                            music_is_muted = False
+                        else:
+                            pygame.mixer.music.set_volume(0)
+                            music_is_muted = True
+
             map.all_sprites.update()
             map.draw(self.screen)
             pygame.display.update()

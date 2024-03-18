@@ -61,7 +61,6 @@ class Map:
             pygame.draw.line(surface, EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y),
                              (match.x, match.y), 1)
         self.all_sprites.draw(surface)
-        print(self.all_sprites)
         '''
         for match in galaxy.matches:
             curr_x = match.x / 260 * settings.SCREEN_WIDTH + 5
