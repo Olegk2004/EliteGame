@@ -6,6 +6,7 @@ from IPython.display import clear_output
 from galaxy import Galaxy
 from player import Player
 from galaxy_plot import create_plot
+from galaxy_map import *
 import galaxy_map
 
 
@@ -14,10 +15,10 @@ class Game:
         pygame.init()
 
         pygame.mixer.init()
-        pygame.mixer.music.load('elite_game_cbl_ambient.wav')
+        pygame.mixer.music.load('elite_game_cbl_ambient.wav')  # Загрузка аудиофайла для фоновой музыки
         pygame.mixer.music.set_volume(0.5)
 
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))  # Установка параметров окна
         pygame.display.set_caption("Super Elite Game")
 
     def run(self):
@@ -25,15 +26,11 @@ class Game:
         new_galaxy.make_systems()
         new_galaxy.create_matches()
         player = Player(new_galaxy)
-        create_plot(new_galaxy)
-        galaxy_map.draw(new_galaxy, player, self.screen)
-
+        # create_plot(new_galaxy)  # Изображение графа связей планет
         pygame.mixer.music.play(-1)
         running = True
         while running:
-
-            pygame.display.update()
-
+            map = Map(new_galaxy, player)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -42,11 +39,13 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Если нажата левая кнопка мыши
                         click_pos = pygame.mouse.get_pos()
-                        clicked_planet = galaxy_map.check_click(click_pos, player, new_galaxy)
+                        clicked_planet = map.check_click(click_pos)
                         if clicked_planet:
                             player.jump(clicked_planet)
                             self.screen.fill((0, 0, 0))
-                            galaxy_map.draw(new_galaxy, player, self.screen)
+            map.all_sprites.update()
+            map.draw(self.screen)
+            pygame.display.update()
 
 
 if __name__ == '__main__':
