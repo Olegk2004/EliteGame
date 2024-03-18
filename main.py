@@ -28,9 +28,9 @@ class Game:
         player = Player(new_galaxy)
         # create_plot(new_galaxy)  # Изображение графа связей планет
         pygame.mixer.music.play(-1)
+        music_is_muted = False
         running = True
         while running:
-            music_is_muted = False
             map = Map(new_galaxy, player)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -45,7 +45,7 @@ class Game:
                             player.jump(clicked_planet)
                             self.screen.fill((0, 0, 0))
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_M:
+                    if event.key == pygame.K_m:
                         if music_is_muted:
                             pygame.mixer.music.set_volume(0.5)
                             music_is_muted = False
