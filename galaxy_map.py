@@ -48,6 +48,8 @@ class Map:
         self.player = player
         self.pirate = pirate
         self.all_sprites = pygame.sprite.Group()
+        self.map_screen = pygame.surface.Surface((MAP_WIDTH, MAP_HEIGHT))
+        self.rect = self.map_screen.get_rect()
 
     # self.systems = galaxy.systems
     def draw(self, surface):
@@ -71,18 +73,10 @@ class Map:
         for match in self.galaxy.matches[self.player.current_planet]:
             # edge_sprite = Edge(EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y), (match.x, match.y), 1)
             # self.all_sprites.add(edge_sprite)
-            pygame.draw.line(surface, EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y),
+            pygame.draw.line(self.map_screen, EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y),
                              (match.x, match.y), 1)
-        self.all_sprites.draw(surface)
-        '''
-        for match in galaxy.matches:
-            curr_x = match.x / 260 * settings.SCREEN_WIDTH + 5
-            curr_y = match.y / 260 * settings.SCREEN_HEIGHT + 5
-            for i in galaxy.matches[match]:
-                match_x = i.x / 260 * settings.SCREEN_WIDTH + 5
-                match_y = i.y / 260 * settings.SCREEN_HEIGHT + 5
-                pygame.draw.line(surface, settings.EDGES_COLOR, (curr_x, curr_y), (match_x, match_y), 1)
-        '''
+        self.all_sprites.draw(self.map_screen)
+        surface.blit(self.map_screen, self.rect)
 
     def check_click(self, click_pos):
         for planet in self.galaxy.matches[self.player.current_planet]:

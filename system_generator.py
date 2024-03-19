@@ -17,9 +17,9 @@ def makesystem(s):
     longnameflag = (s.w0 & 64) & 0xFFFF
 
     thissys.x = s.w1 >> 8
-    thissys.x = thissys.x / 260 * settings.SCREEN_WIDTH + 5
+    thissys.x = thissys.x / 260 * settings.MAP_WIDTH + 5
     thissys.y = s.w0 >> 8
-    thissys.y = thissys.y / 260 * settings.SCREEN_HEIGHT + 5
+    thissys.y = thissys.y / 260 * settings.MAP_HEIGHT + 5
 
     thissys.govtype = ((s.w1 >> 3) & 7)
 
