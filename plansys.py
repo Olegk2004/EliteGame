@@ -1,6 +1,6 @@
 from seed import FastSeedType
 from math import sqrt
-
+import numpy as np
 
 class PlanetarySystem:
     def __init__(self):
@@ -18,6 +18,7 @@ class PlanetarySystem:
         self.radius = 0
         self.flag = 0
         self.Flag = 0
+        self.gold_planet = (np.random.random() > 0.35)
         self.goatsoupseed = FastSeedType(0, 0, 0, 0)
         self.name = ""
 
