@@ -9,6 +9,7 @@ from galaxy_plot import create_plot
 from galaxy_map import *
 import galaxy_map
 from IPython.display import clear_output
+import numpy as np
 def distance(a, b):
   return int(4*sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)/4))
 class Game:
@@ -16,7 +17,10 @@ class Game:
         pygame.init()
 
         pygame.mixer.init()
-        pygame.mixer.music.load('elite_game_cbl_ambient.wav')  # Загрузка аудиофайла для фоновой музыки
+        if np.random.rand() <0.2:
+            pygame.mixer.music.load('extra_music2.mp3')# Секретная музыка
+        else:
+            pygame.mixer.music.load('elite_game_cbl_ambient.wav')  # Загрузка аудиофайла для фоновой музыки
         pygame.mixer.music.set_volume(0.5)
 
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))  # Установка параметров окна
@@ -25,7 +29,7 @@ class Game:
     def run(self):
         new_galaxy = Galaxy(0x5A4A, 0x0248, 0xB753)
         new_galaxy.make_systems()
-
+        ms = 0
         new_galaxy.create_matches()
         player = Player(new_galaxy)
         # create_plot(new_galaxy)  # Изображение графа связей планет
@@ -61,8 +65,22 @@ class Game:
                                 print("\n" * 2)
                                 print(f"Вы не можете прыгнуть до планеты {clicked_planet.name}, вам не хватает топлива!")
                                 print("\n" * 2)
+
                             else:
                                 print("\n" * 10)
+                                if player.current_planet.gold_planet != 0:
+                                    print(f"Вы нашли 500 топлива!")
+                                    pygame.mixer.music.load('extra_music.mp3')  # Секретная музыка
+                                    ms = 1
+                                    pygame.mixer.music.set_volume(0.5)
+                                    pygame.mixer.music.play(-1)
+
+                                else:
+                                    if ms:
+                                        pygame.mixer.music.load('elite_game_cbl_ambient.wav')  # Секретная музыка
+                                        ms = 0
+                                        pygame.mixer.music.set_volume(0.5)
+                                        pygame.mixer.music.play(-1)
                                 print(f"Вы находитесь на планете:{player.current_planet.name}")
                                 if player.current_planet.flag != 0: #Флаг, что есть заправка
                                     print(f"Вау, здесь етсь заправка, вы заправились на {player.current_planet.fuel_station_value_save} топлива")
