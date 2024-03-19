@@ -41,9 +41,10 @@ class Edge(pygame.sprite.Sprite):
 '''
 
 class Map:
-    def __init__(self, galaxy, player):
+    def __init__(self, galaxy, player, pirate):
         self.galaxy = galaxy
         self.player = player
+        self.pirate = pirate
         self.all_sprites = pygame.sprite.Group()
        # self.systems = galaxy.systems
     def draw(self, surface):
@@ -53,6 +54,10 @@ class Map:
                 planet_sprite = Planet(CURRENT_PLANET_COLOR, (system.x, system.y), 5)
             elif system in self.player.visited_planets:  # если это посещенная планета, то другим
                 planet_sprite = Planet(VISITED_PLANETS_COLOR, (system.x, system.y), 3)
+            elif system == self.pirate.current_planet:
+                planet_sprite = Planet(PIRATE_COLOR, (system.x, system.y), 5)
+            elif system in self.pirate.visited_planets:
+                planet_sprite = Planet(PIRATE_COLOR, (system.x, system.y), 3)
             else:
                 if system.gold_planet != 0:
                     planet_sprite = Planet(GOLD_PLANET_COLOR, (system.x, system.y), 4)
