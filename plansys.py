@@ -8,12 +8,16 @@ class PlanetarySystem:
         self.y = 0
         self.pirates_value = 0
         self.fuel_station_value = 0
+        self.pirates_value_save = 0
+        self.fuel_station_value_save = 0
         self.economy = 0
         self.govtype = 0
         self.techlev = 0
         self.population = 0
         self.productivity = 0
         self.radius = 0
+        self.flag = 0
+        self.Flag = 0
         self.goatsoupseed = FastSeedType(0, 0, 0, 0)
         self.name = ""
 
