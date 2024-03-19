@@ -54,8 +54,12 @@ class Map:
             elif system in self.player.visited_planets:  # если это посещенная планета, то другим
                 planet_sprite = Planet(VISITED_PLANETS_COLOR, (system.x, system.y), 3)
             else:
-                if system.fuel_station_value != 0:
+                if system.gold_planet != 0:
+                    planet_sprite = Planet(GOLD_PLANET_COLOR, (system.x, system.y), 4)
+
+                elif system.fuel_station_value != 0:
                     planet_sprite = Planet(FUEL_PLANET_COLOR, (system.x, system.y), 3)
+
                 else:
                     planet_sprite = Planet(UNVISITED_PLANETS_COLOR, (system.x, system.y), 3)
             self.all_sprites.add(planet_sprite)
