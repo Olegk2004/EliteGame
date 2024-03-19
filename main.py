@@ -2,14 +2,12 @@
 import pygame, sys
 from settings import *
 from math import sqrt
-from IPython.display import clear_output
 from galaxy import Galaxy
 from player import Player
 from galaxy_plot import create_plot
 from galaxy_map import *
-import galaxy_map
 from pirate import Pirate
-from IPython.display import clear_output
+from debug import debug
 import numpy as np
 
 
@@ -48,9 +46,9 @@ class Game:
         for i in range(len(available)):
             print(
                 f"{i + 1}.{available[i].name}, необходимо иметь топлива: {distance(available[i], player.current_planet)}")
+
         running = True
         while running:
-
             map = Map(new_galaxy, player, pirate)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -112,6 +110,7 @@ class Game:
 
             map.all_sprites.update()
             map.draw(self.screen)
+            # debug(str(pygame.mouse.get_pos())) #  Прикольно да))
 
             pygame.display.update()
 
