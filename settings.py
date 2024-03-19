@@ -1,9 +1,8 @@
+import pygame
+
 SCREEN_WIDTH = 750
 SCREEN_HEIGHT = 750
 EDGES_COLOR = [255, 255, 0]
-UNVISITED_PLANETS_COLOR = [200, 200, 200]
-CURRENT_PLANET_COLOR = [0, 255, 0]
-VISITED_PLANETS_COLOR = [0, 0, 255]
-FUEL_PLANET_COLOR = [255, 0, 255]
-GOLD_PLANET_COLOR = [255, 255, 0]
-
+STANDART_PLANET_IMAGE = pygame.image.load("Images/Standart_Planet.png")
+FUEL_STATION_PLANET_IMAGE = pygame.image.load("Images/Fuel_Planet.png")
+SUPER_FUEL_PLANET_IMAGE = pygame.image.load("Images/Super_Fuel.png")

@@ -6,14 +6,15 @@ from settings import *
 
 
 class Planet(pygame.sprite.Sprite):
-    def __init__(self, col, pos, radius):
+    def __init__(self, image, pos, radius):
         super().__init__()
-        self.col = col
         self.pos = pos
         self.radius = radius
-        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, self.col, (self.radius, self.radius), self.radius)
+        self.image = image
+        self.image = pygame.transform.scale(self.image, (radius * 3, radius * 3))
         self.rect = self.image.get_rect(center=pos)
+
+
 '''
 class Edge(pygame.sprite.Sprite):
     def __init__(self, col, pos_start, pos_end, width):
@@ -40,33 +41,31 @@ class Edge(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(topleft=pos_end)
 '''
 
+
 class Map:
     def __init__(self, galaxy, player, pirate):
         self.galaxy = galaxy
         self.player = player
         self.pirate = pirate
         self.all_sprites = pygame.sprite.Group()
-       # self.systems = galaxy.systems
+
+    # self.systems = galaxy.systems
     def draw(self, surface):
 
         for system in self.galaxy.systems:
             if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
-                planet_sprite = Planet(CURRENT_PLANET_COLOR, (system.x, system.y), 5)
+                planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 5)
             elif system in self.player.visited_planets:  # если это посещенная планета, то другим
-                planet_sprite = Planet(VISITED_PLANETS_COLOR, (system.x, system.y), 3)
-            elif system == self.pirate.current_planet:
-                planet_sprite = Planet(PIRATE_COLOR, (system.x, system.y), 5)
-            elif system in self.pirate.visited_planets:
-                planet_sprite = Planet(PIRATE_COLOR, (system.x, system.y), 3)
+                planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
             else:
                 if system.gold_planet != 0:
-                    planet_sprite = Planet(GOLD_PLANET_COLOR, (system.x, system.y), 4)
+                    planet_sprite = Planet(SUPER_FUEL_PLANET_IMAGE, (system.x, system.y), 4)
 
                 elif system.fuel_station_value != 0:
-                    planet_sprite = Planet(FUEL_PLANET_COLOR, (system.x, system.y), 3)
+                    planet_sprite = Planet(FUEL_STATION_PLANET_IMAGE, (system.x, system.y), 3)
 
                 else:
-                    planet_sprite = Planet(UNVISITED_PLANETS_COLOR, (system.x, system.y), 3)
+                    planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
             self.all_sprites.add(planet_sprite)
 
         for match in self.galaxy.matches[self.player.current_planet]:
@@ -87,7 +86,8 @@ class Map:
 
     def check_click(self, click_pos):
         for planet in self.galaxy.matches[self.player.current_planet]:
-            distance = ((planet.x - click_pos[0])**2 + (planet.y - click_pos[1])**2)**0.5  # Вычисляем расстояние между центром планеты и местом клика
+            distance = ((planet.x - click_pos[0]) ** 2 + (planet.y - click_pos[
+                1]) ** 2) ** 0.5  # Вычисляем расстояние между центром планеты и местом клика
             if distance < 4:  # Если клик произошел в пределах радиуса планеты
                 return planet  # Возвращаем имя планеты
         return None
