@@ -1,6 +1,7 @@
 from plansys import PlanetarySystem
 import settings
-
+import random
+import numpy as np
 PAIRS = "..LEXEGEZACEBISOUSESARMAINDIREA.ERATENBERALAVETIEDORQUANTEISRION"
 
 
@@ -40,9 +41,13 @@ def makesystem(s):
     thissys.radius = 256 * (((s.w2 >> 8) & 15) + 11) + thissys.x
 
     # !!!
-    thissys.pirates_value = (s.w1 >> 5) & 10
-    thissys.fuel_station_value = (s.w2 >> 5) & 10
-
+    N = 7
+    ver = 1 / N
+    ver2 = 1 / (N + 1)
+    if np.random.rand() < ver:
+        thissys.fuel_station_value = random.randint(15, 90)
+    if np.random.rand() < ver2:
+        thissys.pirates_value = random.randint(0, 25)
     thissys.goatsoupseed.a = s.w1 & 0xFF
     thissys.goatsoupseed.b = s.w1 >> 8
     thissys.goatsoupseed.c = s.w2 & 0xFF
