@@ -45,9 +45,15 @@ def makesystem(s):
     ver = 1 / N
     ver2 = 1 / (N + 1)
     if np.random.rand() < ver:
-        thissys.fuel_station_value = random.randint(15, 90)
+        thissys.fuel_station_value = random.randint(15, 180)
+        thissys.fuel_station_value_save = thissys.fuel_station_value
     if np.random.rand() < ver2:
         thissys.pirates_value = random.randint(0, 25)
+        thissys.pirates_value_save = thissys.pirates_value
+    if thissys.fuel_station_value != 0:
+        thissys.flag = 1
+    if thissys.pirates_value != 0:
+        thissys.Flag = 1
     thissys.goatsoupseed.a = s.w1 & 0xFF
     thissys.goatsoupseed.b = s.w1 >> 8
     thissys.goatsoupseed.c = s.w2 & 0xFF
