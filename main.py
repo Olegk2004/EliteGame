@@ -59,7 +59,7 @@ class Game:
                             available = new_galaxy.matches[player.current_planet]
                             if not a:
                                 print("\n" * 2)
-                                print(f"Вы не можете прыгнуть до этой планеты, вам не хватает топлива!")
+                                print(f"Вы не можете прыгнуть до планеты {clicked_planet.name}, вам не хватает топлива!")
                                 print("\n" * 2)
                             else:
                                 print("\n" * 10)
