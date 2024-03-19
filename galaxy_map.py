@@ -1,6 +1,7 @@
 import pygame
 import galaxy
 import math
+import system_generator
 from settings import *
 
 
@@ -44,15 +45,19 @@ class Map:
         self.galaxy = galaxy
         self.player = player
         self.all_sprites = pygame.sprite.Group()
-
+       # self.systems = galaxy.systems
     def draw(self, surface):
+
         for system in self.galaxy.systems:
             if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
                 planet_sprite = Planet(CURRENT_PLANET_COLOR, (system.x, system.y), 5)
             elif system in self.player.visited_planets:  # если это посещенная планета, то другим
                 planet_sprite = Planet(VISITED_PLANETS_COLOR, (system.x, system.y), 3)
             else:
-                planet_sprite = Planet(UNVISITED_PLANETS_COLOR, (system.x, system.y), 3)
+                if system.fuel_station_value != 0:
+                    planet_sprite = Planet(FUEL_PLANET_COLOR, (system.x, system.y), 3)
+                else:
+                    planet_sprite = Planet(UNVISITED_PLANETS_COLOR, (system.x, system.y), 3)
             self.all_sprites.add(planet_sprite)
 
         for match in self.galaxy.matches[self.player.current_planet]:
