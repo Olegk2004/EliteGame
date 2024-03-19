@@ -12,8 +12,8 @@ class Player:
         now_distance = self.current_planet.distance_to(destination)
         if now_distance <= self.fuel:
             self.fuel -= now_distance
-            self.fuel += self.current_planet.fuel_station_value
-            self.current_planet.fuel_station_value = 0
+            self.fuel += destination.fuel_station_value
+            destination.fuel_station_value = 0
             self.current_planet = destination
             self.visited_planets.append(destination)
             return True
