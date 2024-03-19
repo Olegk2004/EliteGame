@@ -54,6 +54,13 @@ def makesystem(s):
         thissys.flag = 1
     if thissys.pirates_value != 0:
         thissys.Flag = 1
+    if thissys.gold_planet:
+        thissys.fuel_station_value = 500
+        thissys.fuel_station_value_save = thissys.fuel_station_value
+        thissys.pirates_value = 0
+        thissys.flag = 0
+        thissys.Flag = 0
+        thissys.pirates_value_save = thissys.pirates_value
     thissys.goatsoupseed.a = s.w1 & 0xFF
     thissys.goatsoupseed.b = s.w1 >> 8
     thissys.goatsoupseed.c = s.w2 & 0xFF
