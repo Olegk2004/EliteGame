@@ -76,6 +76,7 @@ class Map:
             pygame.draw.line(self.map_screen, EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y),
                              (match.x, match.y), 1)
         self.all_sprites.draw(self.map_screen)
+        pygame.draw.rect(self.map_screen, (255, 255, 255), self.rect, 2)
         surface.blit(self.map_screen, self.rect)
 
     def check_click(self, click_pos):
