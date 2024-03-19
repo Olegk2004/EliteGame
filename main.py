@@ -55,17 +55,24 @@ class Game:
                         clicked_planet = map.check_click(click_pos)
                         if clicked_planet:
                             clear_output()
-                            player.jump(clicked_planet)
+                            a = player.jump(clicked_planet)
                             available = new_galaxy.matches[player.current_planet]
-                            print("\n" * 10)
-                            print(f"Вы находитесь на планете:{player.current_planet.name}")
-                            if player.current_planet.flag != 0:
-                                print(f"Вау, здесь етсь заправка, вы заправились на {player.current_planet.fuel_station_value_save} топлива")
-                            print(f"У вас топлива: {player.fuel}")
-                            print("Можете прыгнуть до: ")
-                            for i in range(len(available)):
-                                print(
-                                    f"{i + 1}.{available[i].name}, необходимо иметь топлива: {distance(available[i], player.current_planet)}")
+                            if not a:
+                                print("\n" * 2)
+                                print(f"Вы не можете прыгнуть до этой планеты, вам не хватает топлива!")
+                                print("\n" * 2)
+                            else:
+                                print("\n" * 10)
+                                print(f"Вы находитесь на планете:{player.current_planet.name}")
+                                if player.current_planet.flag != 0: #Флаг, что есть заправка
+                                    print(f"Вау, здесь етсь заправка, вы заправились на {player.current_planet.fuel_station_value_save} топлива")
+                                if player.current_planet.Flag != 0:#Флаг, что есть pirates
+                                    print(f"Опа, здесь оказались пираты, они отняли у вас: {player.current_planet.pirates_value_save} топлива, а также попортили лицо")
+                                print(f"У вас топлива: {player.fuel}")
+                                print("Можете прыгнуть до: ")
+                                for i in range(len(available)):
+                                    print(
+                                        f"{i + 1}.{available[i].name}, необходимо иметь топлива: {distance(available[i], player.current_planet)}")
                             self.screen.fill((0, 0, 0))
 
                 elif event.type == pygame.KEYDOWN:
