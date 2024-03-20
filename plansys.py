@@ -2,10 +2,12 @@ from seed import FastSeedType
 from math import sqrt
 import numpy as np
 
+
 class PlanetarySystem:
     def __init__(self):
         self.x = 0
         self.y = 0
+        self.pos = (self.x, self.y)
         self.pirates_value = 0
         self.fuel_station_value = 0
         self.pirates_value_save = 0

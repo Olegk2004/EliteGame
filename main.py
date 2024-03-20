@@ -91,7 +91,7 @@ class Game:
                                 print(f"Вы находитесь на планете:{player.current_planet.name}")
                                 if player.current_planet.flag != 0:  # Флаг, что есть заправка
                                     print(
-                                        f"Вау, здесь етсь заправка, вы заправились на {player.current_planet.fuel_station_value_save} топлива")
+                                        f"Вау, здесь есть заправка, вы заправились на {player.current_planet.fuel_station_value_save} топлива")
                                 print(f"У вас топлива: {player.fuel}")
                                 print("Можете прыгнуть до: ")
                                 for i in range(len(available)):
@@ -110,7 +110,7 @@ class Game:
 
             map.all_sprites.update()
             map.draw(self.screen)
-            # debug(str(pygame.mouse.get_pos())) #  Прикольно да))
+            # debug(str(pygame.mouse.get_pos()))  # Прикольно да))
 
             pygame.display.update()
 

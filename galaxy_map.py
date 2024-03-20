@@ -2,7 +2,9 @@ import pygame
 import galaxy
 import math
 import system_generator
+from scipy.spatial import Voronoi
 from settings import *
+from debug import debug
 
 
 class Planet(pygame.sprite.Sprite):
@@ -15,33 +17,6 @@ class Planet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=pos)
 
 
-'''
-class Edge(pygame.sprite.Sprite):
-    def __init__(self, col, pos_start, pos_end, width):
-        super().__init__()
-        self.col = col
-        self.pos_start = pos_start
-        self.pos_end = pos_end
-        self.width = width
-        dx = self.pos_end[0] - self.pos_start[0]
-        dy = self.pos_end[1] - self.pos_start[1]
-        length = int((dx ** 2 + dy ** 2) ** 0.5)
-        self.image = pygame.Surface((abs(dx), abs(dy)), pygame.SRCALPHA)
-        if pos_start[0] <= pos_end[0] and pos_start[1] <= pos_end[1]:
-            pygame.draw.line(self.image, self.col, (0, 0), (abs(dx), abs(dy)), self.width)
-            self.rect = self.image.get_rect(topleft=pos_start)
-        elif pos_start[0] <= pos_end[0] and pos_start[1] >= pos_end[1]:
-            pygame.draw.line(self.image, self.col, (0, abs(dx)), (abs(dx), 0), self.width)
-            self.rect = self.image.get_rect(topright=pos_end)
-        elif pos_start[0] >= pos_end[0] and pos_start[1] <= pos_end[1]:
-            pygame.draw.line(self.image, self.col, (0, abs(dx)), (abs(dx), 0), self.width)
-            self.rect = self.image.get_rect(topright=pos_start)
-        elif pos_start[0] >= pos_end[0] and pos_start[1] >= pos_end[1]:
-            pygame.draw.line(self.image, self.col, (0, 0), (abs(dx), abs(dy)), self.width)
-            self.rect = self.image.get_rect(topleft=pos_end)
-'''
-
-
 class Map:
     def __init__(self, galaxy, player, pirate):
         self.galaxy = galaxy
@@ -51,33 +26,85 @@ class Map:
         self.map_screen = pygame.surface.Surface((MAP_WIDTH, MAP_HEIGHT))
         self.rect = self.map_screen.get_rect()
 
-    # self.systems = galaxy.systems
     def draw(self, surface):
-
+        self.draw_voronoi_segments(self.map_screen)
         for system in self.galaxy.systems:
             if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
-                planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 5)
-            elif system in self.player.visited_planets:  # если это посещенная планета, то другим
-                planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
+                if system in self.galaxy.capitals:
+                    planet_sprite = Planet(CAPITAL_PLANET_IMAGE, (system.x, system.y), 5)
+                else:
+                    planet_sprite = Planet(CURRENT_PLANET_IMAGE, (system.x, system.y), 5)
             else:
-                if system.gold_planet != 0:
+                # Если планета золотая/c заправкой и при этом является столицей,
+                # она будет помечена просто как столица (потом доработаем, когда больше запаримся со спрайтами)
+                if system in self.galaxy.capitals:
+                    planet_sprite = Planet(CAPITAL_PLANET_IMAGE, (system.x, system.y), 3)
+                elif system.gold_planet != 0:
                     planet_sprite = Planet(SUPER_FUEL_PLANET_IMAGE, (system.x, system.y), 4)
-
                 elif system.fuel_station_value != 0:
                     planet_sprite = Planet(FUEL_STATION_PLANET_IMAGE, (system.x, system.y), 3)
-
                 else:
-                    planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
+                    planet_sprite = Planet(STANDARD_PLANET_IMAGE, (system.x, system.y), 3)
             self.all_sprites.add(planet_sprite)
 
         for match in self.galaxy.matches[self.player.current_planet]:
-            # edge_sprite = Edge(EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y), (match.x, match.y), 1)
-            # self.all_sprites.add(edge_sprite)
             pygame.draw.line(self.map_screen, EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y),
                              (match.x, match.y), 1)
         self.all_sprites.draw(self.map_screen)
         pygame.draw.rect(self.map_screen, (255, 255, 255), self.rect, 2)
         surface.blit(self.map_screen, self.rect)
+
+    def draw_voronoi_segments(self, surface):
+        vor = Voronoi([i.pos for i in self.galaxy.capitals])
+        # Рисование границ ячеек
+        for i in range(len(vor.ridge_vertices)):
+            ridge = vor.ridge_vertices[i]
+            if all(v >= 0 for v in ridge):
+                pygame.draw.line(surface, (255, 255, 255), vor.vertices[ridge[0]], vor.vertices[ridge[1]])
+
+            elif ridge[0] >= 0 and ridge[1] == -1:
+                # Если одна вершина бесконечна, рисуем линию к краю экрана
+                x0, y0 = vor.vertices[ridge[0]]
+                x1, y1 = vor.vertices[vor.ridge_vertices[i][0]]
+                dx = x1 - x0
+                dy = y1 - y0
+                if dx == 0:
+                    x = x0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
+                    y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
+                elif dy == 0:
+                    x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
+                    y = y0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
+                else:
+                    slope = dy / dx
+                    if abs(slope) * MAP_WIDTH > MAP_HEIGHT:
+                        y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
+                        x = (y - y0) / slope + x0
+                    else:
+                        x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
+                        y = slope * (x - x0) + y0
+                pygame.draw.line(surface, (255, 255, 255), (x0, y0), (x, y))
+                
+            elif ridge[0] == -1 and ridge[1] >= 0:
+                # Если другая вершина бесконечна, рисуем линию к краю экрана
+                x0, y0 = vor.vertices[ridge[1]]
+                x1, y1 = vor.vertices[vor.ridge_vertices[i][1]]
+                dx = x1 - x0
+                dy = y1 - y0
+                if dx == 0:
+                    x = x0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
+                    y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
+                elif dy == 0:
+                    x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
+                    y = y0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
+                else:
+                    slope = dy / dx
+                    if abs(slope) * MAP_WIDTH > MAP_HEIGHT:
+                        y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
+                        x = (y - y0) / slope + x0
+                    else:
+                        x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
+                        y = slope * (x - x0) + y0
+                pygame.draw.line(surface, (255, 255, 255), (x0, y0), (x, y))
 
     def check_click(self, click_pos):
         for planet in self.galaxy.matches[self.player.current_planet]:
