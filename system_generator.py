@@ -17,10 +17,10 @@ def makesystem(s):
     longnameflag = (s.w0 & 64) & 0xFFFF
 
     thissys.x = s.w1 >> 8
-    thissys.x = thissys.x / 260 * settings.MAP_WIDTH + 7
+    thissys.x = thissys.x / 260 * settings.MAP_WIDTH + 5
     thissys.y = s.w0 >> 8
-    thissys.y = thissys.y / 260 * settings.MAP_HEIGHT + 7
-    thissys.pos = (thissys.x, thissys.y)
+    thissys.y = thissys.y / 260 * settings.MAP_HEIGHT + 5
+
     thissys.govtype = ((s.w1 >> 3) & 7)
 
     thissys.economy = ((s.w0 >> 8) & 7)
@@ -61,6 +61,11 @@ def makesystem(s):
         thissys.flag = 0
         thissys.Flag = 0
         thissys.pirates_value_save = thissys.pirates_value
+
+        thissys.type = "С супер-заправкой"
+    elif thissys.fuel_station_value != 0:
+        thissys.type = "С заправкой"
+
     thissys.goatsoupseed.a = s.w1 & 0xFF
     thissys.goatsoupseed.b = s.w1 >> 8
     thissys.goatsoupseed.c = s.w2 & 0xFF
@@ -82,4 +87,5 @@ def makesystem(s):
         thissys.name += PAIRS[pair4] + PAIRS[pair4 + 1]
 
     thissys.name = thissys.name.replace('.', '')
+
     return thissys

@@ -2,12 +2,10 @@ from seed import FastSeedType
 from math import sqrt
 import numpy as np
 
-
 class PlanetarySystem:
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.pos = (self.x, self.y)
         self.pirates_value = 0
         self.fuel_station_value = 0
         self.pirates_value_save = 0
@@ -20,7 +18,8 @@ class PlanetarySystem:
         self.radius = 0
         self.flag = 0
         self.Flag = 0
-        self.gold_planet = (np.random.random() < 0.005)
+        self.type = "обычная"
+        self.gold_planet = (np.random.random() < 0.095)
         self.goatsoupseed = FastSeedType(0, 0, 0, 0)
         self.name = ""
 

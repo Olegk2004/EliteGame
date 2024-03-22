@@ -2,9 +2,9 @@ import pygame
 import galaxy
 import math
 import system_generator
-from scipy.spatial import Voronoi
+import plansys
+from math import sqrt
 from settings import *
-from debug import debug
 
 
 class Planet(pygame.sprite.Sprite):
@@ -17,6 +17,33 @@ class Planet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=pos)
 
 
+'''
+class Edge(pygame.sprite.Sprite):
+    def __init__(self, col, pos_start, pos_end, width):
+        super().__init__()
+        self.col = col
+        self.pos_start = pos_start
+        self.pos_end = pos_end
+        self.width = width
+        dx = self.pos_end[0] - self.pos_start[0]
+        dy = self.pos_end[1] - self.pos_start[1]
+        length = int((dx ** 2 + dy ** 2) ** 0.5)
+        self.image = pygame.Surface((abs(dx), abs(dy)), pygame.SRCALPHA)
+        if pos_start[0] <= pos_end[0] and pos_start[1] <= pos_end[1]:
+            pygame.draw.line(self.image, self.col, (0, 0), (abs(dx), abs(dy)), self.width)
+            self.rect = self.image.get_rect(topleft=pos_start)
+        elif pos_start[0] <= pos_end[0] and pos_start[1] >= pos_end[1]:
+            pygame.draw.line(self.image, self.col, (0, abs(dx)), (abs(dx), 0), self.width)
+            self.rect = self.image.get_rect(topright=pos_end)
+        elif pos_start[0] >= pos_end[0] and pos_start[1] <= pos_end[1]:
+            pygame.draw.line(self.image, self.col, (0, abs(dx)), (abs(dx), 0), self.width)
+            self.rect = self.image.get_rect(topright=pos_start)
+        elif pos_start[0] >= pos_end[0] and pos_start[1] >= pos_end[1]:
+            pygame.draw.line(self.image, self.col, (0, 0), (abs(dx), abs(dy)), self.width)
+            self.rect = self.image.get_rect(topleft=pos_end)
+'''
+
+
 class Map:
     def __init__(self, galaxy, player, pirate):
         self.galaxy = galaxy
@@ -24,92 +51,130 @@ class Map:
         self.pirate = pirate
         self.all_sprites = pygame.sprite.Group()
         self.map_screen = pygame.surface.Surface((MAP_WIDTH, MAP_HEIGHT))
+        self.border = pygame.surface.Surface((SCREEN_WIDTH - MAP_WIDTH, SCREEN_HEIGHT)) # Для работы с областью спарва
         self.rect = self.map_screen.get_rect()
 
-    def draw(self, surface):
-        self.draw_voronoi_segments(self.map_screen)
+
+    def distance_to(self, destination_planet):
+        return int(4 * sqrt(
+            (self.player.current_planet.x - destination_planet.x) * (self.player.current_planet.x - destination_planet.x) + (self.player.current_planet.y- destination_planet.y) * (
+                    self.player.current_planet.y - destination_planet.y) / 4))
+    # self.systems = galaxy.systems
+    def draw(self, surface, fuel, ration, cheked_mouse):
+        len_of_bar = fuel * 0.2 # Нормировка длины полоски
+
+        if self.player.fuel > self.player.fuel_const:
+            const_len_of_bar = self.player.fuel * 0.2 # Расширяет основную шкалу топлива, если топливо стало больше, чем было изначально(можно, конено, ограничить всё нововедённой переменной)
+            des_of_bar_save = self.player.fuel * 0.2
+            self.player.fuel_const = self.player.fuel
+
+        else:
+            const_len_of_bar = self.player.fuel_const * 0.2 # Постоянная длина синих границ полоски
+            des_of_bar_save = self.player.bar_save * 0.2 # Для сохранения координаты, до куда в прошлый раз коцнулась полоска
+        len_of_got_bar = 0
+        len_of_spent_bar = (des_of_bar_save - len_of_bar) # Длина коцки
+        if len_of_spent_bar < 0:
+            len_of_spent_bar = 0
+            len_of_got_bar = len_of_bar - des_of_bar_save
         for system in self.galaxy.systems:
             if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
-                if system in self.galaxy.capitals:
-                    planet_sprite = Planet(CAPITAL_PLANET_IMAGE, (system.x, system.y), 5)
-                else:
-                    planet_sprite = Planet(CURRENT_PLANET_IMAGE, (system.x, system.y), 5)
+                planet_sprite = Planet(PLAYER_IMAGE, (system.x, system.y), 5)
+            elif system in self.player.visited_planets:  # если это посещенная планета, то другим
+                planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
             else:
-                # Если планета золотая/c заправкой и при этом является столицей,
-                # она будет помечена просто как столица (потом доработаем, когда больше запаримся со спрайтами)
-                if system in self.galaxy.capitals:
-                    planet_sprite = Planet(CAPITAL_PLANET_IMAGE, (system.x, system.y), 3)
-                elif system.gold_planet != 0:
+                if system.gold_planet != 0:
                     planet_sprite = Planet(SUPER_FUEL_PLANET_IMAGE, (system.x, system.y), 4)
+
                 elif system.fuel_station_value != 0:
                     planet_sprite = Planet(FUEL_STATION_PLANET_IMAGE, (system.x, system.y), 3)
+
                 else:
-                    planet_sprite = Planet(STANDARD_PLANET_IMAGE, (system.x, system.y), 3)
+                    planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
             self.all_sprites.add(planet_sprite)
 
         for match in self.galaxy.matches[self.player.current_planet]:
+            # edge_sprite = Edge(EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y), (match.x, match.y), 1)
+            # self.all_sprites.add(edge_sprite)
             pygame.draw.line(self.map_screen, EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y),
-                             (match.x, match.y), 1)
+                             (match.x, match.y), 2)
         self.all_sprites.draw(self.map_screen)
         pygame.draw.rect(self.map_screen, (255, 255, 255), self.rect, 2)
+
+        pygame.draw.rect(self.border, (255, 255, 255), (0, 600, 300, 5), 5)# границы полей справа, область снизу
+        pygame.draw.rect(self.border, (255, 255, 255), (0, 350, 300, 5), 5)# область по середине
+        pygame.draw.rect(self.border, (255, 255, 255), (0, 0, 300, 2), 5)# верхняя область
+
+        pygame.draw.rect(self.border, (0, 0, 255), (3, 315, const_len_of_bar, 35), 5)  # Параметры полоски топлива
+        pygame.draw.rect(self.border, (255, 0, 0), (6, 320, const_len_of_bar - 7, 25), 13)
+        pygame.draw.rect(self.border, (0, 255, 0), (6, 320,  len_of_bar - 7, 25), 13)
+
+        pygame.font.init()# инициализация текста
+        my_font = pygame.font.SysFont('Comic Sans MS', 15)# его параметры
+        text_surface = my_font.render(f'У вас топлива: {self.player.fuel}, max: {MAX_FUEL_VALUE}', False, (255, 255, 255))
+        text2 = my_font.render(f'Вы находитесь на планете: ', False, (255, 255, 255))
+        text3 = my_font.render(f'{self.player.current_planet.name}', False, (255, 255, 255))
+        text4 = my_font.render(f'Тип планеты: ', False, (255, 255, 255))
+        text5 = my_font.render(f'{self.player.current_planet.type}', False, (255, 255, 255))
+        text6 = my_font.render(f'Ресурсы: ', False, (255, 255, 255))
+        text7 = my_font.render(f'Топливо: ', False, (255, 255, 255))
+        text12 = my_font.render(f"", False, (0, 0, 0))
+        text9 = my_font.render("", False, (255, 255, 255))
+        text8 = my_font.render(f'{self.player.current_planet.fuel_station_value_save}', False, (255, 255, 255))
+        text13 = text10 = text11 = my_font.render(f"", False, (0, 0, 0))
+        text15 = my_font.render(f"Кол-во посещённых планет: {len(self.player.visited_planets)}", False, (255, 255, 255))
+        if cheked_mouse in self.player.visited_planets:
+            text9 = my_font.render(f'Планета : {cheked_mouse.name}', False, (255, 255, 255)) # Пошла информация о наведённой курсором планете
+            #text10 = my_font.render(f'Доступные ресурсы: ', False, (255, 255, 255))
+            #text11 = my_font.render(f'Топливо: {cheked_mouse.fuel_station_value}', False, (255, 255, 255))
+            text12 = my_font.render(f'Необходимо топлива: {self.distance_to(cheked_mouse)}', False, (255, 255, 255))
+
+        elif cheked_mouse in self.galaxy.matches[self.player.current_planet]:
+            text13 = my_font.render(f'Неисследованная планета', False, (255, 255, 255))
+            text12 = my_font.render(f'Необходимо топлива: {self.distance_to(cheked_mouse)}', False, (255, 255, 255))
+        else:
+            text9 = my_font.render("Космическое пространство", False, (255, 255, 255))
+            tetx12 = text13 = text10 = text11 = my_font.render(f"", False, (0, 0, 0))
+
+        pygame.draw.rect(self.border, (255, 255, 0), (des_of_bar_save - len_of_spent_bar - 1, 320, len_of_spent_bar * int(ration) / 100, 25), 13)# Анимированный расход топлива
+        pygame.draw.rect(self.border, (255, 0, 255), (des_of_bar_save + len_of_got_bar * int(-ration) / 100 + len_of_got_bar, 320, len_of_got_bar * int(ration)/100, 25), 14)
+
         surface.blit(self.map_screen, self.rect)
+        self.border.blit(text_surface, (40, 5))# У вас топлива
+        self.border.blit(text2, (40, 25))# Вы находитесь
+        self.border.blit(text3, (40, 40))
+        self.border.blit(text4, (40, 65))# Тип планеты
+        self.border.blit(text5, (40, 80))
+        self.border.blit(text6, (40, 105))# Ресурсы
+        self.border.blit(text7, (40, 120))
+        self.border.blit(text15, (40, 140))
+        self.border.blit(text8, (115, 120))
+        self.border.blit(text9, (5, 375))
+        self.border.blit(text10, (5, 395))
+        self.border.blit(text11, (5, 415))
+        self.border.blit(text12, (5, 415))
+        self.border.blit(text13, (5, 395))
 
-    def draw_voronoi_segments(self, surface):
-        vor = Voronoi([i.pos for i in self.galaxy.capitals])
-        # Рисование границ ячеек
-        for i in range(len(vor.ridge_vertices)):
-            ridge = vor.ridge_vertices[i]
-            if all(v >= 0 for v in ridge):
-                pygame.draw.line(surface, (255, 255, 255), vor.vertices[ridge[0]], vor.vertices[ridge[1]])
 
-            elif ridge[0] >= 0 and ridge[1] == -1:
-                # Если одна вершина бесконечна, рисуем линию к краю экрана
-                x0, y0 = vor.vertices[ridge[0]]
-                x1, y1 = vor.vertices[vor.ridge_vertices[i][0]]
-                dx = x1 - x0
-                dy = y1 - y0
-                if dx == 0:
-                    x = x0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
-                    y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
-                elif dy == 0:
-                    x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
-                    y = y0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
-                else:
-                    slope = dy / dx
-                    if abs(slope) * MAP_WIDTH > MAP_HEIGHT:
-                        y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
-                        x = (y - y0) / slope + x0
-                    else:
-                        x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
-                        y = slope * (x - x0) + y0
-                pygame.draw.line(surface, (255, 255, 255), (x0, y0), (x, y))
-                
-            elif ridge[0] == -1 and ridge[1] >= 0:
-                # Если другая вершина бесконечна, рисуем линию к краю экрана
-                x0, y0 = vor.vertices[ridge[1]]
-                x1, y1 = vor.vertices[vor.ridge_vertices[i][1]]
-                dx = x1 - x0
-                dy = y1 - y0
-                if dx == 0:
-                    x = x0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
-                    y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
-                elif dy == 0:
-                    x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
-                    y = y0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
-                else:
-                    slope = dy / dx
-                    if abs(slope) * MAP_WIDTH > MAP_HEIGHT:
-                        y = 0 if y0 < MAP_HEIGHT // 2 else MAP_HEIGHT
-                        x = (y - y0) / slope + x0
-                    else:
-                        x = 0 if x0 < MAP_WIDTH // 2 else MAP_WIDTH
-                        y = slope * (x - x0) + y0
-                pygame.draw.line(surface, (255, 255, 255), (x0, y0), (x, y))
+
+        surface.blit(self.border, (SCREEN_HEIGHT, 0))
+
 
     def check_click(self, click_pos):
         for planet in self.galaxy.matches[self.player.current_planet]:
             distance = ((planet.x - click_pos[0]) ** 2 + (planet.y - click_pos[
                 1]) ** 2) ** 0.5  # Вычисляем расстояние между центром планеты и местом клика
             if distance < 4:  # Если клик произошел в пределах радиуса планеты
-                return planet  # Возвращаем имя планеты
+                return planet  # Возвращаем планетy
+        return None
+    def check_mouse(self, mouse_pos):
+        for planet in self.player.visited_planets:
+            distance = ((planet.x - mouse_pos[0]) ** 2 + (planet.y - mouse_pos[
+                1]) ** 2) ** 0.5
+            if distance < 10:  # Если курсор находится в пределах радиуса планеты
+                return planet  # Возвращаем планетy
+        for planet in self.galaxy.matches:
+            distance = ((planet.x - mouse_pos[0]) ** 2 + (planet.y - mouse_pos[
+                1]) ** 2) ** 0.5
+            if distance < 10:  # Если курсор находится в пределах радиуса планеты
+                return planet  # Возвращаем планетy
         return None
