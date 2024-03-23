@@ -11,18 +11,14 @@ from planet_player import PlanetPlayer
 class PlanetMap:
     def __init__(self, planet):
         self.planet = planet
-        self.planet_player = None
         self.all_sprites = pygame.sprite.Group()
-        self.map_screen = pygame.surface.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.rect = self.map_screen.get_rect()
-
+        self.display_surface = pygame.display.get_surface()
         self.setup()
 
     def setup(self):
         self.planet_player = PlanetPlayer((100, 100), self.all_sprites)
 
-    def draw(self, surface):
-        self.all_sprites.draw(self.map_screen)
-        self.all_sprites.update()
-        pygame.draw.rect(self.map_screen, (255, 255, 255), self.rect, 2)
-        surface.blit(self.map_screen, self.rect)
+    def draw(self, dt):
+        self.display_surface.fill('black')
+        self.all_sprites.draw(self.display_surface)
+        self.all_sprites.update(dt)

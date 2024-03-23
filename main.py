@@ -17,27 +17,35 @@ class Game:
     def __init__(self):
         pygame.init()
 
+        self.clock = pygame.time.Clock()
+
         # Работа с музыкой
         pygame.mixer.init()
         pygame.mixer.music.load('Music/elite_game_cbl_ambient.wav')  # Загрузка аудиофайла для фоновой музыки
         pygame.mixer.music.set_volume(0.5)
 
+        # Работа с галактикой
+        self.galaxy = Galaxy(0x5A4A, 0x0248, 0xB753)  # Создаем галактику с определенным сидом
+        self.galaxy.make_systems()  # создаем планеты в галактике
+        self.galaxy.create_matches()  # определяем для каждой планеты список доступных для прыжка
+
+        # создаем игрока
+        self.player = Player(self.galaxy)
+        # игрок пока никак не отображается, однако он нужен для отображения текущей планеты, запаса топлива и т.д.
+
         # Работа с экраном
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))  # Установка параметров окна
         pygame.display.set_caption("Super Elite Game")
 
+        # Создаем объект карты планеты
+        # По сути это пока один объект для всех планет, при перелете он просто перерисовывается в зависимости
+        # от характеристик планеты
+        self.planet_map = PlanetMap(self.player.current_planet)
+
     def run(self):
-        # Работа с галактикой
-        new_galaxy = Galaxy(0x5A4A, 0x0248, 0xB753)  # Создаем галактику с определенным сидом
-        new_galaxy.make_systems()  # создаем планеты в галактике
-        new_galaxy.create_matches()  # определяем для каждой планеты список доступных для прыжка
 
         # Для полоски
         ration = 0
-
-        # создаем игрока
-        player = Player(new_galaxy)
-        # игрок пока никак не отображается, однако он нужен для отображения текущей планеты, запаса топлива и т.д.
 
         # Запускаем музыку
         pygame.mixer.music.play(-1)
@@ -48,9 +56,8 @@ class Game:
         running = True
         while running:
 
-            # создаем карты космоса и планеты
-            planet_map = PlanetMap(player.current_planet)
-            galaxy_map = Map(new_galaxy, player)
+            # создаем карту космоса
+            galaxy_map = Map(self.galaxy, self.player)
 
             # цикл обработки событий (нажатие на клавиши и мышка)
             for event in pygame.event.get():
@@ -68,13 +75,14 @@ class Game:
 
                         if clicked_planet:  # если курсор на планете
 
-                            player.bar_save = player.fuel
-                            player.jump(clicked_planet)  # совершаем прыжок
+                            self.player.bar_save = self.player.fuel
+                            self.player.jump(clicked_planet)  # совершаем прыжок
+                            self.planet_map = PlanetMap(self.player.current_planet)
 
                             ration = 100
 
-                            if player.current_planet.gold_planet != 0:  # если мы на золотой планете
-                                player.current_planet.gold_planet = 0  # делаем планету обычной
+                            if self.player.current_planet.gold_planet != 0:  # если мы на золотой планете
+                                self.player.current_planet.gold_planet = 0  # делаем планету обычной
                                 pygame.mixer.music.load('Music/extra_music2.mp3')  # Играем секретную музыку
                                 pygame.mixer.music.set_volume(0.5)
                                 pygame.mixer.music.play(-1)
@@ -97,20 +105,21 @@ class Game:
                             pygame.mixer.music.set_volume(0)
                             music_is_muted = True
                     elif event.key == pygame.K_e:  # нажатие на кнопку "E" меняет карту космоса на карту планеты
-                        if player.display_mode == "map":
-                            player.display_mode = "planet"
+                        if self.player.display_mode == "map":
+                            self.player.display_mode = "planet"
                         else:
-                            player.display_mode = "map"
+                            self.player.display_mode = "map"
 
             self.screen.fill((0, 0, 0))  # обновляем экран заливая всю поверхность черным цветом
 
             checked_mouse = galaxy_map.check_mouse(
                 pygame.mouse.get_pos())  # определяем позицию мышки, чтобы передать ее в функцию draw
 
-            if player.display_mode == "map":
-                galaxy_map.draw(self.screen, player.fuel, ration, checked_mouse)
+            if self.player.display_mode == "map":
+                galaxy_map.draw(self.screen, self.player.fuel, ration, checked_mouse)
             else:
-                planet_map.draw(self.screen)
+                dt = self.clock.tick(100) / 1000
+                self.planet_map.draw(dt)
 
             # debug(str(pygame.mouse.get_pos()))  # Прикольно да))
             ration -= 1
