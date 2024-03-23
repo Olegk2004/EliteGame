@@ -27,3 +27,4 @@ class PlanetarySystem:
         return int(4 * sqrt(
             (self.x - destination_planet.x) * (self.x - destination_planet.x) + (self.y - destination_planet.y) * (
                     self.y - destination_planet.y) / 4))
+

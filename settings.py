@@ -10,6 +10,5 @@ STANDART_PLANET_IMAGE = pygame.image.load("Images/Standard_Planet.png")
 CAPITAL_PLANET_IMAGE = pygame.image.load("Images/Capital_Planet.png")
 FUEL_STATION_PLANET_IMAGE = pygame.image.load("Images/Fuel_Planet.png")
 SUPER_FUEL_PLANET_IMAGE = pygame.image.load("Images/Super_Fuel.png")
-PLAYER_IMAGE = pygame.image.load("Images/7rb7.gif")
+# PLAYER_IMAGE = pygame.image.load("Images/7rb7.gif")
 MAX_FUEL_VALUE = 1480
-FPS = 90
