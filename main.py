@@ -18,7 +18,6 @@ class Game:
         pygame.init()
 
         self.clock = pygame.time.Clock()
-
         # Работа с музыкой
         pygame.mixer.init()
         pygame.mixer.music.load('Music/elite_game_cbl_ambient.wav')  # Загрузка аудиофайла для фоновой музыки
