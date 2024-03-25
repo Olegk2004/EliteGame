@@ -3,27 +3,130 @@ import galaxy
 import math
 import system_generator
 import plansys
+from debug import debug
 from math import sqrt
 from settings import *
 
 
 class Planet(pygame.sprite.Sprite):
-    def __init__(self, image, pos, radius):
-        super().__init__()
+    def __init__(self, image, pos, radius, group):
+        super().__init__(group)
         self.pos = pos
         self.radius = radius
         self.image = image
-        self.image = pygame.transform.scale(self.image, (radius * 3, radius * 3))
-        self.rect = self.image.get_rect(center=pos)
+        self.image = pygame.transform.scale(self.image, (self.radius * 10, self.radius * 10))
+        self.rect = self.image.get_rect(center=self.pos)
 
+
+class CameraGroup(pygame.sprite.Group):
+    def __init__(self, surface, galaxy, player):
+        super().__init__()
+        self.display_surface = surface
+        self.galaxy = galaxy
+        self.player = player
+
+        for system in self.galaxy.systems:
+            if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
+                system.sprite = Planet(CURRENT_PLANET_IMAGE, (system.x, system.y), 5, self)
+            elif system in self.player.visited_planets:  # если это посещенная планета, то другим
+                system.sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3, self)
+            else:
+                if system.gold_planet != 0:
+                    system.sprite = Planet(SUPER_FUEL_PLANET_IMAGE, (system.x, system.y), 4, self)
+                elif system.fuel_station_value != 0:
+                    system.sprite = Planet(FUEL_STATION_PLANET_IMAGE, (system.x, system.y), 3, self)
+                else:
+                    system.sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3, self)
+
+        # camera offset
+        self.half_w = self.display_surface.get_size()[0] // 2
+        self.half_h = self.display_surface.get_size()[1] // 2
+        self.offset = pygame.math.Vector2()
+
+        # box setup
+        self.camera_borders = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
+        l = self.camera_borders['left']
+        t = self.camera_borders['top']
+        w = self.display_surface.get_size()[0] - (self.camera_borders['left'] + self.camera_borders['right'])
+        h = self.display_surface.get_size()[1] - (self.camera_borders['top'] + self.camera_borders['bottom'])
+        self.camera_rect = pygame.Rect(l, t, w, h)
+
+        self.background_surf = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+        self.background_rect = self.background_surf.get_rect(topleft=(0, 0))
+
+        # camera speed
+        self.keyboard_speed = 20
+        self.mouse_speed = 0.2
+
+        # zoom
+        self.zoom_scale = 1
+        self.internal_surf_size = (MAP_WIDTH, MAP_HEIGHT)
+        self.internal_surf = pygame.Surface(self.internal_surf_size, pygame.SRCALPHA)
+        self.internal_rect = self.internal_surf.get_rect(center=(self.half_w, self.half_h))
+        self.internal_surface_size_vector = pygame.math.Vector2(self.internal_surf_size)
+        self.internal_offset = pygame.math.Vector2()
+        self.internal_offset.x = self.internal_surf_size[0] // 2 - self.half_w
+        self.internal_offset.y = self.internal_surf_size[1] // 2 - self.half_h
+
+        self.scaled_surf = None
+        self.scaled_rect = None
+
+    def center_target_camera(self, target):
+        self.offset = pygame.math.Vector2(self.player.current_planet.sprite.rect.centerx - self.half_w,
+                                          self.player.current_planet.sprite.rect.centery - self.half_h)
+
+    def keyboard_control(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]: self.camera_rect.x -= self.keyboard_speed
+        if keys[pygame.K_RIGHT]: self.camera_rect.x += self.keyboard_speed
+        if keys[pygame.K_UP]: self.camera_rect.y -= self.keyboard_speed
+        if keys[pygame.K_DOWN]: self.camera_rect.y += self.keyboard_speed
+
+        self.offset.x += self.camera_rect.left - self.camera_borders['left']
+        self.offset.y += self.camera_rect.top - self.camera_borders['top']
+
+    def zoom_keyboard_control(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_EQUALS] and self.zoom_scale - 2 < 0.05:
+            self.zoom_scale += 0.05
+        if keys[pygame.K_MINUS] and self.zoom_scale - 0.20 > 0.05:
+            self.zoom_scale -= 0.05
+
+    def draw(self):
+        self.center_target_camera(self.player.current_planet)
+        self.keyboard_control()
+        self.zoom_keyboard_control()
+
+        self.internal_surf.fill('black')
+        background_offset = self.background_rect.topleft - self.offset + self.internal_offset
+        self.internal_surf.blit(self.background_surf, background_offset)
+
+        self.player.current_planet.sprite.kill()
+        self.player.current_planet.sprite = Planet(CURRENT_PLANET_IMAGE, (self.player.current_planet.x, self.player.current_planet.y), 5, self)
+        for match in self.galaxy.matches[self.player.current_planet]:
+            if match in self.player.visited_planets:
+                match.sprite.kill()
+                match.sprite = Planet(STANDART_PLANET_IMAGE, (match.x, match.y), 3, self)
+            pygame.draw.line(self.internal_surf, EDGES_COLOR, self.player.current_planet.sprite.rect.center - self.offset + self.internal_offset,
+                             match.sprite.rect.center - self.offset + self.internal_offset, 2)
+        # active elements
+        for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
+            offset_pos = sprite.rect.topleft - self.offset + self.internal_offset
+            self.internal_surf.blit(sprite.image, offset_pos)
+
+        self.scaled_surf = pygame.transform.scale(self.internal_surf, self.internal_surface_size_vector * self.zoom_scale)
+        self.scaled_rect = self.scaled_surf.get_rect(center=(self.half_w, self.half_h))
+
+        self.display_surface.blit(self.scaled_surf, self.scaled_rect)
 
 class Map:
     def __init__(self, galaxy, player):
         self.galaxy = galaxy
         self.player = player
         self.all_sprites = pygame.sprite.Group()
-        self.map_screen = pygame.surface.Surface((MAP_WIDTH, MAP_HEIGHT))
-        self.border = pygame.surface.Surface((SCREEN_WIDTH - MAP_WIDTH, SCREEN_HEIGHT))  # Для работы с областью спарва
+        self.map_screen = pygame.surface.Surface((MAP_PANEL_WIDTH, MAP_PANEL_HEIGHT))
+        self.camera_group = CameraGroup(self.map_screen, self.galaxy, self.player)
+        self.border = pygame.surface.Surface((SCREEN_WIDTH - MAP_PANEL_WIDTH, SCREEN_HEIGHT))  # Для работы с областью справа
         self.rect = self.map_screen.get_rect()
 
     def distance_to(self, destination_planet):
@@ -33,46 +136,31 @@ class Map:
                         self.player.current_planet.y - destination_planet.y) * (
                     self.player.current_planet.y - destination_planet.y) / 4))
 
-    # self.systems = galaxy.systems
-    def draw(self, surface, fuel, ration, cheked_mouse):
-        len_of_bar = fuel * 0.2  # Нормировка длины полоски
+    def draw(self):
+        self.camera_group.update()
+        self.camera_group.draw()
+
+    def draw_side_panel(self, surface, fuel, ration, checked_mouse):
+        LEN_CONST = 200 / FUEL_CONST
+        len_of_bar = fuel * LEN_CONST  # Нормировка длины полоски
 
         if self.player.fuel > self.player.fuel_const:
-            const_len_of_bar = self.player.fuel * 0.2  # Расширяет основную шкалу топлива, если топливо стало больше, чем было изначально(можно, конено, ограничить всё нововедённой переменной)
-            des_of_bar_save = self.player.fuel * 0.2
+            const_len_of_bar = self.player.fuel * LEN_CONST  # Расширяет основную шкалу топлива, если топливо стало больше, чем было изначально(можно, конено, ограничить всё нововедённой переменной)
+            des_of_bar_save = self.player.fuel * LEN_CONST
             self.player.fuel_const = self.player.fuel
 
         else:
-            const_len_of_bar = self.player.fuel_const * 0.2  # Постоянная длина синих границ полоски
-            des_of_bar_save = self.player.bar_save * 0.2  # Для сохранения координаты, до куда в прошлый раз коцнулась полоска
+            const_len_of_bar = self.player.fuel_const * LEN_CONST  # Постоянная длина синих границ полоски
+            des_of_bar_save = self.player.bar_save * LEN_CONST  # Для сохранения координаты, до куда в прошлый раз коцнулась полоска
         len_of_got_bar = 0
         len_of_spent_bar = (des_of_bar_save - len_of_bar)  # Длина коцки
         if len_of_spent_bar < 0:
             len_of_spent_bar = 0
             len_of_got_bar = len_of_bar - des_of_bar_save
-        for system in self.galaxy.systems:
-            if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
-                planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 5)
-            elif system in self.player.visited_planets:  # если это посещенная планета, то другим
-                planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
-            else:
-                if system.gold_planet != 0:
-                    planet_sprite = Planet(SUPER_FUEL_PLANET_IMAGE, (system.x, system.y), 4)
 
-                elif system.fuel_station_value != 0:
-                    planet_sprite = Planet(FUEL_STATION_PLANET_IMAGE, (system.x, system.y), 3)
-
-                else:
-                    planet_sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3)
-            self.all_sprites.add(planet_sprite)
-
-        for match in self.galaxy.matches[self.player.current_planet]:
-            pygame.draw.line(self.map_screen, EDGES_COLOR, (self.player.current_planet.x, self.player.current_planet.y),
-                             (match.x, match.y), 2)
-        self.all_sprites.draw(self.map_screen)
-        self.all_sprites.update()
         pygame.draw.rect(self.map_screen, (255, 255, 255), self.rect, 2)
 
+        self.border.fill((0, 0, 0))
         pygame.draw.rect(self.border, (255, 255, 255), (0, 600, 300, 5), 5)  # границы полей справа, область снизу
         pygame.draw.rect(self.border, (255, 255, 255), (0, 350, 300, 5), 5)  # область по середине
         pygame.draw.rect(self.border, (255, 255, 255), (0, 0, 300, 2), 5)  # верхняя область
@@ -96,22 +184,22 @@ class Map:
         text8 = my_font.render(f'{self.player.current_planet.fuel_station_value_save}', False, (255, 255, 255))
         text13 = text10 = text11 = my_font.render(f"", False, (0, 0, 0))
         text15 = my_font.render(f"Кол-во посещённых планет: {len(self.player.visited_planets)}", False, (255, 255, 255))
-        if cheked_mouse in self.player.visited_planets:
-            text9 = my_font.render(f'Планета : {cheked_mouse.name}', False,
+        if checked_mouse in self.player.visited_planets:
+            text9 = my_font.render(f'Планета : {checked_mouse.name}', False,
                                    (255, 255, 255))  # Пошла информация о наведённой курсором планете
             # text10 = my_font.render(f'Доступные ресурсы: ', False, (255, 255, 255))
             # text11 = my_font.render(f'Топливо: {cheked_mouse.fuel_station_value}', False, (255, 255, 255))
-            text12 = my_font.render(f'Необходимо топлива: {self.distance_to(cheked_mouse)}', False, (255, 255, 255))
+            text12 = my_font.render(f'Необходимо топлива: {self.distance_to(checked_mouse)}', False, (255, 255, 255))
 
-        elif cheked_mouse in self.galaxy.matches[self.player.current_planet]:
+        elif checked_mouse in self.galaxy.matches[self.player.current_planet]:
             text13 = my_font.render(f'Неисследованная планета', False, (255, 255, 255))
-            text12 = my_font.render(f'Необходимо топлива: {self.distance_to(cheked_mouse)}', False, (255, 255, 255))
-        elif cheked_mouse in self.galaxy.systems:
+            text12 = my_font.render(f'Необходимо топлива: {self.distance_to(checked_mouse)}', False, (255, 255, 255))
+        elif checked_mouse in self.galaxy.systems:
             text13 = my_font.render(f'Неисследованная планета', False, (255, 255, 255))
             text12 = my_font.render('Необходимо топлива: неизвестно', False, (255, 255, 255))
         else:
             text9 = my_font.render("Космическое пространство", False, (255, 255, 255))
-            tetx12 = text13 = text10 = text11 = my_font.render(f"", False, (0, 0, 0))
+            text12 = text13 = text10 = text11 = my_font.render(f"", False, (0, 0, 0))
 
         pygame.draw.rect(self.border, (255, 255, 0),
                          (des_of_bar_save - len_of_spent_bar - 1, 320, len_of_spent_bar * int(ration) / 100, 25),
@@ -140,16 +228,60 @@ class Map:
 
     def check_click(self, click_pos):
         for planet in self.galaxy.matches[self.player.current_planet]:
-            distance = ((planet.x - click_pos[0]) ** 2 + (planet.y - click_pos[
-                1]) ** 2) ** 0.5  # Вычисляем расстояние между центром планеты и местом клика
-            if distance < 4:  # Если клик произошел в пределах радиуса планеты
-                return planet  # Возвращаем планетy
+            # Calculate the offset of the planet sprite relative to the visible area
+            offset_sprite_cords = planet.sprite.rect.center - self.camera_group.offset + self.camera_group.internal_offset
+
+            # Adjust the offset
+            adjusted_offset_sprite_cords = (
+                offset_sprite_cords[0] + self.camera_group.scaled_rect.left,
+                offset_sprite_cords[1] + self.camera_group.scaled_rect.top
+            )
+
+            # Calculate the zoomed coordinates of the planet sprite within the visible area
+            zoomed_sprite_cords = (
+                (adjusted_offset_sprite_cords[0]), # * self.camera_group.zoom_scale),
+                (adjusted_offset_sprite_cords[1]) # * self.camera_group.zoom_scale)
+            )
+
+            # Calculate the distance between the click position and the zoomed sprite coordinates
+            distance = ((zoomed_sprite_cords[0] - click_pos[0]) ** 2 +
+                        (zoomed_sprite_cords[1] - click_pos[1]) ** 2) ** 0.5
+
+            # Calculate the radius of the planet based on its sprite size
+            planet_radius = (((planet.sprite.rect.topleft[0] - planet.sprite.rect.center[0]) * self.camera_group.zoom_scale) ** 2 +
+                             ((planet.sprite.rect.topleft[1] - planet.sprite.rect.center[1]) * self.camera_group.zoom_scale) ** 2) ** 0.5
+            # Check if the distance is within the planet radius scaled by the zoom factor
+            if distance < planet_radius:
+                return planet
         return None
 
     def check_mouse(self, mouse_pos):
-        for planet in self.galaxy.systems:
-            distance = ((planet.x - mouse_pos[0]) ** 2 + (planet.y - mouse_pos[
-                1]) ** 2) ** 0.5
-            if distance < 4:  # Если курсор находится в пределах радиуса планеты
-                return planet  # Возвращаем планетy
+        for planet in self.galaxy.matches[self.player.current_planet]:
+            # Calculate the offset of the planet sprite relative to the visible area
+            offset_sprite_cords = planet.sprite.rect.center - self.camera_group.offset + self.camera_group.internal_offset
+
+            # Adjust the offset
+            adjusted_offset_sprite_cords = (
+                offset_sprite_cords[0] + self.camera_group.scaled_rect.left,
+                offset_sprite_cords[1] + self.camera_group.scaled_rect.top
+            )
+
+            # Calculate the zoomed coordinates of the planet sprite within the visible area
+            zoomed_sprite_cords = (
+                (adjusted_offset_sprite_cords[0]),  # * self.camera_group.zoom_scale),
+                (adjusted_offset_sprite_cords[1])  # * self.camera_group.zoom_scale)
+            )
+
+            # Calculate the distance between the click position and the zoomed sprite coordinates
+            distance = ((zoomed_sprite_cords[0] - mouse_pos[0]) ** 2 +
+                        (zoomed_sprite_cords[1] - mouse_pos[1]) ** 2) ** 0.5
+
+            # Calculate the radius of the planet based on its sprite size
+            planet_radius = (((planet.sprite.rect.topleft[0] - planet.sprite.rect.center[
+                0]) * self.camera_group.zoom_scale) ** 2 +
+                             ((planet.sprite.rect.topleft[1] - planet.sprite.rect.center[
+                                 1]) * self.camera_group.zoom_scale) ** 2) ** 0.5
+            # Check if the distance is within the planet radius scaled by the zoom factor
+            if distance < planet_radius:
+                return planet
         return None
