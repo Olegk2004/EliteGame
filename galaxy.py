@@ -31,5 +31,5 @@ class Galaxy:
             self.matches[i] = []
             for j in self.systems:
                 if i != j:
-                    if i.distance_to(j) < (65 / sqrt(253 ** 2 + 253 ** 2) * sqrt(settings.MAP_WIDTH**2 + settings.MAP_HEIGHT ** 2)):
+                    if i.distance_to(j) < (65 / sqrt(253 ** 2 + 253 ** 2) * sqrt(settings.MAP_WIDTH ** 2 + settings.MAP_HEIGHT ** 2)):
                         self.matches[i].append(j)
