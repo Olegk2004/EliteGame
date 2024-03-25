@@ -1,5 +1,6 @@
 from seed import FastSeedType
 from math import sqrt
+from galaxy_map import Planet
 import numpy as np
 
 class PlanetarySystem:
@@ -22,9 +23,9 @@ class PlanetarySystem:
         self.gold_planet = (np.random.random() < 0.095)
         self.goatsoupseed = FastSeedType(0, 0, 0, 0)
         self.name = ""
+        self.sprite = None
 
     def distance_to(self, destination_planet):
         return int(4 * sqrt(
             (self.x - destination_planet.x) * (self.x - destination_planet.x) + (self.y - destination_planet.y) * (
                     self.y - destination_planet.y) / 4))
-
