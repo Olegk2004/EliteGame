@@ -77,10 +77,14 @@ class CameraGroup(pygame.sprite.Group):
 
     def keyboard_control(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]: self.camera_rect.x -= self.keyboard_speed
-        if keys[pygame.K_RIGHT]: self.camera_rect.x += self.keyboard_speed
-        if keys[pygame.K_UP]: self.camera_rect.y -= self.keyboard_speed
-        if keys[pygame.K_DOWN]: self.camera_rect.y += self.keyboard_speed
+        if keys[pygame.K_LEFT]:
+            self.camera_rect.x -= self.keyboard_speed
+        if keys[pygame.K_RIGHT]:
+            self.camera_rect.x += self.keyboard_speed
+        if keys[pygame.K_UP]:
+            self.camera_rect.y -= self.keyboard_speed
+        if keys[pygame.K_DOWN]:
+            self.camera_rect.y += self.keyboard_speed
 
         self.offset.x += self.camera_rect.left - self.camera_borders['left']
         self.offset.y += self.camera_rect.top - self.camera_borders['top']
@@ -129,6 +133,14 @@ class Map:
         self.border = pygame.surface.Surface((SCREEN_WIDTH - MAP_PANEL_WIDTH, SCREEN_HEIGHT))  # Для работы с областью справа
         self.rect = self.map_screen.get_rect()
 
+        '''
+        MINIMAP_WIDTH = SCREEN_WIDTH - MAP_PANEL_WIDTH
+        MINIMAP_HEIGHT = SCREEN_HEIGHT - MAP_PANEL_HEIGHT
+        self.minimap_surface = pygame.surface.Surface((MINIMAP_WIDTH, MINIMAP_HEIGHT))
+        self.minimap_rect = self.minimap_surface.get_rect(topleft=(SCREEN_WIDTH - MINIMAP_WIDTH, 0))
+        self.minimap_scale = 0.1
+        '''
+
     def distance_to(self, destination_planet):
         return int(4 * sqrt(
             (self.player.current_planet.x - destination_planet.x) * (
@@ -160,8 +172,24 @@ class Map:
 
         pygame.draw.rect(self.map_screen, (255, 255, 255), self.rect, 2)
 
+        '''
+        # Draw the minimap
         self.border.fill((0, 0, 0))
-        pygame.draw.rect(self.border, (255, 255, 255), (0, 600, 300, 5), 5)  # границы полей справа, область снизу
+        for system in self.galaxy.systems:
+            # Calculate the position of the system on the minimap
+            system_pos = (int(system.x * self.minimap_scale), int(system.y * self.minimap_scale))
+            pygame.draw.circle(self.minimap_surface, (255, 255, 255), system_pos, 2)  # Draw a small dot for each system
+
+        # Draw the sliding window on the minimap
+        sliding_window_rect = pygame.Rect(
+            self.camera_group.offset[0] * self.minimap_scale,
+            self.camera_group.offset[1] * self.minimap_scale,
+            self.rect.width * self.minimap_scale / self.camera_group.zoom_scale,
+            self.rect.height * self.minimap_scale / self.camera_group.zoom_scale
+        )
+        pygame.draw.rect(self.minimap_surface, (0, 255, 0), sliding_window_rect, 2)
+        '''
+        pygame.draw.rect(self.border, (255, 255, 255), (-2, 448, 304, 750), 2)  # границы полей справа, область снизу
         pygame.draw.rect(self.border, (255, 255, 255), (0, 350, 300, 5), 5)  # область по середине
         pygame.draw.rect(self.border, (255, 255, 255), (0, 0, 300, 2), 5)  # верхняя область
 
@@ -188,7 +216,7 @@ class Map:
             text9 = my_font.render(f'Планета : {checked_mouse.name}', False,
                                    (255, 255, 255))  # Пошла информация о наведённой курсором планете
             # text10 = my_font.render(f'Доступные ресурсы: ', False, (255, 255, 255))
-            # text11 = my_font.render(f'Топливо: {cheked_mouse.fuel_station_value}', False, (255, 255, 255))
+            # text11 = my_font.render(f'Топливо: {checked_mouse.fuel_station_value}', False, (255, 255, 255))
             text12 = my_font.render(f'Необходимо топлива: {self.distance_to(checked_mouse)}', False, (255, 255, 255))
 
         elif checked_mouse in self.galaxy.matches[self.player.current_planet]:
@@ -224,6 +252,11 @@ class Map:
         self.border.blit(text12, (5, 415))
         self.border.blit(text13, (5, 395))
 
+        '''
+        # Blit the minimap onto the side panel
+        self.minimap_surface.fill((255, 0, 0))
+        self.border.blit(self.minimap_surface, self.minimap_rect.topleft)
+        '''
         surface.blit(self.border, (SCREEN_HEIGHT, 0))
 
     def check_click(self, click_pos):
@@ -256,7 +289,7 @@ class Map:
         return None
 
     def check_mouse(self, mouse_pos):
-        for planet in self.galaxy.matches[self.player.current_planet]:
+        for planet in self.galaxy.systems:
             # Calculate the offset of the planet sprite relative to the visible area
             offset_sprite_cords = planet.sprite.rect.center - self.camera_group.offset + self.camera_group.internal_offset
 
