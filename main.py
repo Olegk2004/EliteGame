@@ -117,7 +117,7 @@ class Game:
             if self.player.display_mode == "map":
                 galaxy_map.draw(self.screen, self.player.fuel, ration, checked_mouse)
             else:
-                dt = self.clock.tick(100) / 1000
+                dt = self.clock.tick(300) / 1000
                 self.planet_map.draw(dt)
 
             # debug(str(pygame.mouse.get_pos()))  # Прикольно да))

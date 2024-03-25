@@ -73,4 +73,3 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.input()
         self.move(dt)
         self.animate(dt)
-        print(self.image_frame)
