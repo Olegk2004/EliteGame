@@ -45,7 +45,7 @@ def makesystem(s):
     ver = 1 / N
     ver2 = 1 / (N + 1)
     if np.random.rand() < ver:
-        thissys.fuel_station_value = random.randint(15, 180)
+        thissys.fuel_station_value = int(random.randint(15, 180) * settings.FUEL_CONST // 1000)
         thissys.fuel_station_value_save = thissys.fuel_station_value
     if np.random.rand() < ver2:
         thissys.pirates_value = random.randint(0, 25)
@@ -55,7 +55,7 @@ def makesystem(s):
     if thissys.pirates_value != 0:
         thissys.Flag = 1
     if thissys.gold_planet:
-        thissys.fuel_station_value = 500
+        thissys.fuel_station_value = settings.FUEL_CONST // 2
         thissys.fuel_station_value_save = thissys.fuel_station_value
         thissys.pirates_value = 0
         thissys.flag = 0
