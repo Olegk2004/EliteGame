@@ -1,12 +1,12 @@
 from random import choice
-from settings import MAX_FUEL_VALUE
+from settings import MAX_FUEL_VALUE, FUEL_CONST
 
 
 class Player:
     def __init__(self, galaxy):
         self.current_planet = choice(galaxy.systems)
         self.galaxy = galaxy
-        self.fuel = 1000
+        self.fuel = FUEL_CONST
         self.fuel_const = self.fuel  # Две строчки для полоски (сорри за такой стиль)
         self.bar_save = self.fuel
         self.visited_planets = [self.current_planet]
