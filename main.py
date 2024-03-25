@@ -16,6 +16,7 @@ import numpy as np
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.event.set_grab(True)
 
         self.clock = pygame.time.Clock()
         # Работа с музыкой
@@ -40,6 +41,8 @@ class Game:
         # По сути это пока один объект для всех планет, при перелете он просто перерисовывается в зависимости
         # от характеристик планеты
         self.planet_map = PlanetMap(self.player.current_planet)
+        # создаем карту космоса
+        self.galaxy_map = Map(self.galaxy, self.player)
 
     def run(self):
 
@@ -54,10 +57,6 @@ class Game:
         # Запуск цикла обновления игры, который остановится только когда пользователь выйдет из игры
         running = True
         while running:
-
-            # создаем карту космоса
-            galaxy_map = Map(self.galaxy, self.player)
-
             # цикл обработки событий (нажатие на клавиши и мышка)
             for event in pygame.event.get():
 
@@ -70,7 +69,7 @@ class Game:
                     if event.button == 1:  # Если нажата левая кнопка мыши
 
                         click_pos = pygame.mouse.get_pos()  # получаем координаты курсора
-                        clicked_planet = galaxy_map.check_click(click_pos)  # проверяем находится ли курсор на планете
+                        clicked_planet = self.galaxy_map.check_click(click_pos)  # проверяем находится ли курсор на планете
 
                         if clicked_planet:  # если курсор на планете
 
@@ -108,14 +107,22 @@ class Game:
                             self.player.display_mode = "planet"
                         else:
                             self.player.display_mode = "map"
+                    elif event.key == pygame.K_r:  # Нажатие на кнопку "R" возвращает зум в исходное состояние
+                        self.galaxy_map.camera_group.zoom_scale = 1
+
+                if event.type == pygame.MOUSEWHEEL:
+                    if event.y > 0 and self.galaxy_map.camera_group.zoom_scale - 2 < 0.05:
+                        self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
+                    if event.y < 0 and self.galaxy_map.camera_group.zoom_scale - 0.20 > 0.05:
+                        self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
 
             self.screen.fill((0, 0, 0))  # обновляем экран заливая всю поверхность черным цветом
 
-            checked_mouse = galaxy_map.check_mouse(
-                pygame.mouse.get_pos())  # определяем позицию мышки, чтобы передать ее в функцию draw
-
             if self.player.display_mode == "map":
-                galaxy_map.draw(self.screen, self.player.fuel, ration, checked_mouse)
+                self.galaxy_map.draw()
+                checked_mouse = self.galaxy_map.check_mouse(
+                    pygame.mouse.get_pos())  # определяем позицию мышки, чтобы передать ее в функцию draw
+                self.galaxy_map.draw_side_panel(self.screen, self.player.fuel, ration, checked_mouse)
             else:
                 dt = self.clock.tick(300) / 1000
                 self.planet_map.draw(dt)
