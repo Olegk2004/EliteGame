@@ -48,7 +48,7 @@ class Game:
 
         # Для полоски
         ration = 0
-
+        F = pygame.time.Clock()
         # Запускаем музыку
         pygame.mixer.music.play(-1)
         music_is_muted = False  # изначально музыка играет, чтобы ее выключить надо нажать "m"
@@ -119,9 +119,9 @@ class Game:
                         self.galaxy_map.camera_group.zoom_scale = 1
 
                 if event.type == pygame.MOUSEWHEEL:
-                    if event.y > 0 and self.galaxy_map.camera_group.zoom_scale - 2 < 0.05:
+                    if event.y > 0 and self.galaxy_map.camera_group.zoom_scale - 2 < 0.085:
                         self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
-                    if event.y < 0 and self.galaxy_map.camera_group.zoom_scale - 0.20 > 0.05:
+                    if event.y < 0 and self.galaxy_map.camera_group.zoom_scale - 0.20 > 0.085:
                         self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
 
             self.screen.fill((0, 0, 0))  # обновляем экран заливая всю поверхность черным цветом
@@ -136,8 +136,9 @@ class Game:
                 self.planet_map.draw(dt)
 
             # debug(str(pygame.mouse.get_pos()))  # Прикольно да))
-            ration -= 1
+            ration -= 10
 
+            F.tick(FPS)
             pygame.display.update()
 
 
