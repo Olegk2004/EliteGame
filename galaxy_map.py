@@ -171,7 +171,7 @@ class Map:
             len_of_got_bar = len_of_bar - des_of_bar_save
 
         pygame.draw.rect(self.map_screen, (255, 255, 255), self.rect, 2)
-
+        self.border.fill((0, 0, 0))
         '''
         # Draw the minimap
         self.border.fill((0, 0, 0))
