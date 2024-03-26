@@ -52,7 +52,7 @@ class Game:
         # Запускаем музыку
         pygame.mixer.music.play(-1)
         music_is_muted = False  # изначально музыка играет, чтобы ее выключить надо нажать "m"
-        music_mode = "standart"  # переменная определяющая какой трек сейчас играет
+        music_mode = "space"  # переменная определяющая какой трек сейчас играет
 
         # Запуск цикла обновления игры, который остановится только когда пользователь выйдет из игры
         running = True
@@ -84,14 +84,14 @@ class Game:
                                 pygame.mixer.music.load('Music/extra_music2.mp3')  # Играем секретную музыку
                                 pygame.mixer.music.set_volume(0.5)
                                 pygame.mixer.music.play(-1)
-                                music_mode = "secret"
+                                music_mode = "space_gold"
 
                             else:
-                                if music_mode == "secret":  # если мы ушли с золотой планеты, запускается обычная музыка
+                                if music_mode == "space_gold":  # если мы ушли с золотой планеты, запускается обычная музыка
                                     pygame.mixer.music.load('Music/elite_game_cbl_ambient.wav')
                                     pygame.mixer.music.set_volume(0.5)
                                     pygame.mixer.music.play(-1)
-                                    music_mode = "standart"
+                                    music_mode = "space"
 
                 # обработка нажатия клавиш клавиатуры
                 elif event.type == pygame.KEYDOWN:
@@ -105,8 +105,16 @@ class Game:
                     elif event.key == pygame.K_e:  # нажатие на кнопку "E" меняет карту космоса на карту планеты
                         if self.player.display_mode == "map":
                             self.player.display_mode = "planet"
+                            pygame.mixer.music.load('Music/planet_music.mp3')
+                            pygame.mixer.music.set_volume(0.5)
+                            pygame.mixer.music.play(-1)
+                            music_mode = "planet"
                         else:
                             self.player.display_mode = "map"
+                            pygame.mixer.music.load('Music/elite_game_cbl_ambient.wav')
+                            pygame.mixer.music.set_volume(0.5)
+                            pygame.mixer.music.play(-1)
+                            music_mode = "space"
                     elif event.key == pygame.K_r:  # Нажатие на кнопку "R" возвращает зум в исходное состояние
                         self.galaxy_map.camera_group.zoom_scale = 1
 
