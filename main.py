@@ -81,7 +81,7 @@ class Game:
 
                             if self.player.current_planet.gold_planet != 0:  # если мы на золотой планете
                                 self.player.current_planet.gold_planet = 0  # делаем планету обычной
-                                pygame.mixer.music.load('Music/extra_music2.mp3')  # Играем секретную музыку
+                                pygame.mixer.music.load('Music/extra_music.mp3')  # Играем секретную музыку
                                 pygame.mixer.music.set_volume(0.5)
                                 pygame.mixer.music.play(-1)
                                 music_mode = "space_gold"
