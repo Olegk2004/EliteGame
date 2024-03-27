@@ -15,3 +15,4 @@ SUPER_FUEL_PLANET_IMAGE = pygame.image.load("Images/Super_Fuel.png")
 # PLAYER_IMAGE = pygame.image.load("Images/7rb7.gif")
 FUEL_CONST = 2500
 MAX_FUEL_VALUE = int(FUEL_CONST * 1.48)
+FPS = 220

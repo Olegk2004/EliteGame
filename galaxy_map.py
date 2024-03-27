@@ -51,7 +51,8 @@ class CameraGroup(pygame.sprite.Group):
         h = self.display_surface.get_size()[1] - (self.camera_borders['top'] + self.camera_borders['bottom'])
         self.camera_rect = pygame.Rect(l, t, w, h)
 
-        self.background_surf = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+        background_image = pygame.image.load('Images/galaxy_map_square_background.png')
+        self.background_surf = pygame.transform.scale(background_image, (MAP_WIDTH, MAP_HEIGHT))
         self.background_rect = self.background_surf.get_rect(topleft=(0, 0))
 
         # camera speed
