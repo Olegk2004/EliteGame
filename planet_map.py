@@ -6,6 +6,7 @@ from scipy.spatial import Voronoi
 from settings import *
 from debug import debug
 from planet_player import PlanetPlayer
+from overlay import Overlay
 
 
 class PlanetMap:
@@ -14,6 +15,7 @@ class PlanetMap:
         self.all_sprites = pygame.sprite.Group()
         self.display_surface = pygame.display.get_surface()
         self.setup()
+        self.overlay = Overlay(self.display_surface, self.planet_player)
 
     def setup(self):
         self.planet_player = PlanetPlayer((100, 100), self.all_sprites)
@@ -22,3 +24,4 @@ class PlanetMap:
         self.display_surface.fill('black')
         self.all_sprites.draw(self.display_surface)
         self.all_sprites.update(dt)
+        self.overlay.display()
