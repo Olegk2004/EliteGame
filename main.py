@@ -121,7 +121,7 @@ class Game:
                 if event.type == pygame.MOUSEWHEEL:
                     if event.y > 0 and self.galaxy_map.camera_group.zoom_scale - 2 < 0.085:
                         self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
-                    if event.y < 0 and self.galaxy_map.camera_group.zoom_scale - 0.20 > 0.085:
+                    if event.y < 0 and self.galaxy_map.camera_group.zoom_scale - 0.20 > 0.085 and self.galaxy_map.camera_group.zoom_scale + event.y * 0.05 > 0.25: # )
                         self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
 
             self.screen.fill((0, 0, 0))  # обновляем экран заливая всю поверхность черным цветом
