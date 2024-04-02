@@ -124,6 +124,7 @@ class CameraGroup(pygame.sprite.Group):
 
         self.display_surface.blit(self.scaled_surf, self.scaled_rect)
 
+
 class Map:
     def __init__(self, galaxy, player):
         self.galaxy = galaxy
