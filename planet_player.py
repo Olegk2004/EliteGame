@@ -2,6 +2,7 @@ import pygame
 from settings import *
 from timer import Timer
 
+
 class PlanetPlayer(pygame.sprite.Sprite):
     def __init__(self, pos, group):
         super().__init__(group)
@@ -88,10 +89,10 @@ class PlanetPlayer(pygame.sprite.Sprite):
             timer.update()
 
     def use_tool(self):
-        return
+        pass
 
     def move(self, dt):
-        # Нормализация ветора. Это нужно, чтобы скорость по диагонали была такая же
+        # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
         if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
             self.direction = self.direction.normalize()
 
