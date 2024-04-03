@@ -30,9 +30,11 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.tool_index = 0
         self.selected_tool = self.tools[self.tool_index]
 
+        #
+
     def import_image(self):
         path = "Images/player_" + self.image_status + "_" + str(int(self.image_frame) + 1) + ".png"
-        now_image = pygame.image.load(path)
+        now_image = pygame.image.load(path).convert_alpha()
         now_image = pygame.transform.scale(now_image, (40, 60))
         return now_image
 

@@ -27,16 +27,16 @@ class CameraGroup(pygame.sprite.Group):
 
         for system in self.galaxy.systems:
             if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
-                system.sprite = Planet(CURRENT_PLANET_IMAGE, (system.x, system.y), 5, self)
+                system.sprite = Planet(CURRENT_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 5, self)
             elif system in self.player.visited_planets:  # если это посещенная планета, то другим
-                system.sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3, self)
+                system.sprite = Planet(STANDART_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
             else:
                 if system.gold_planet != 0:
-                    system.sprite = Planet(SUPER_FUEL_PLANET_IMAGE, (system.x, system.y), 4, self)
+                    system.sprite = Planet(SUPER_FUEL_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 4, self)
                 elif system.fuel_station_value != 0:
-                    system.sprite = Planet(FUEL_STATION_PLANET_IMAGE, (system.x, system.y), 3, self)
+                    system.sprite = Planet(FUEL_STATION_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
                 else:
-                    system.sprite = Planet(STANDART_PLANET_IMAGE, (system.x, system.y), 3, self)
+                    system.sprite = Planet(STANDART_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
 
         # camera offset
         self.half_w = self.display_surface.get_size()[0] // 2
@@ -51,7 +51,7 @@ class CameraGroup(pygame.sprite.Group):
         h = self.display_surface.get_size()[1] - (self.camera_borders['top'] + self.camera_borders['bottom'])
         self.camera_rect = pygame.Rect(l, t, w, h)
 
-        background_image = pygame.image.load('Images/galaxy_map_square_background.png')
+        background_image = pygame.image.load('Images/galaxy_map_square_background.png').convert_alpha()
         self.background_surf = pygame.transform.scale(background_image, (MAP_WIDTH, MAP_HEIGHT))
         self.background_rect = self.background_surf.get_rect(topleft=(0, 0))
 
