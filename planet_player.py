@@ -4,7 +4,7 @@ from timer import Timer
 
 
 class PlanetPlayer(pygame.sprite.Sprite):
-    def __init__(self, pos, group):
+    def __init__(self, pos, group, coll_pos):
         super().__init__(group)
 
         self.image_status = "idle"  # для определения какого направления спрайт вставлять
@@ -18,7 +18,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2()  # направление, определяется вектором. Во время обновления координаты игрока меняются в зависимости от направления
         self.pos = pygame.math.Vector2(self.rect.center)  # координаты игрока
         self.speed = 200
-
+        self.coll_pos = coll_pos
+        self.statx = 1
+        self.staty = 1
         # Таймеры
         self.timers = {
             'tool use': Timer(350, self.use_tool),
@@ -30,15 +32,14 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.tool_index = 0
         self.selected_tool = self.tools[self.tool_index]
 
-        #
-
     def import_image(self):
         path = "Images/player_" + self.image_status + "_" + str(int(self.image_frame) + 1) + ".png"
-        now_image = pygame.image.load(path).convert_alpha()
-        now_image = pygame.transform.scale(now_image, (40, 60))
+        now_image = pygame.image.load(path)
+        now_image = pygame.transform.scale(now_image, (50, 70))
         return now_image
 
     def animate(self, dt):
+
         self.image_frame += 4 * dt
         if self.image_frame >= 4:  # больше 3, потому что количество спрайтов для анимации равно 3
             self.image_frame = 0
@@ -46,7 +47,8 @@ class PlanetPlayer(pygame.sprite.Sprite):
 
     def input(self):
         keys = pygame.key.get_pressed()
-
+        self.statx = 1
+        self.staty = 1
         # Если игрок в процессе использования инструмента,
         # он не может двигаться и сменить инструмент
         if not self.timers['tool use'].active:
@@ -94,18 +96,50 @@ class PlanetPlayer(pygame.sprite.Sprite):
         pass
 
     def move(self, dt):
+        current_x = [col_pos[0] for col_pos in self.coll_pos] # все иксы осязаемых объектов
+        current_y = [col_pos[1] for col_pos in self.coll_pos]# все игреки
+        for i in range(len(current_x)):
+            if abs(current_x[i] - self.pos.x - self.direction.x * self.speed * dt) <= EPS  : # если близко подошли к икс координате осязаемого объекта
+                self.statx = 0
+                break
+
+        for i in range(len(current_y)):
+            if abs(current_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS: # если к игрек координате
+                self.staty = 0
+                break
         # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
         if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
             self.direction = self.direction.normalize()
 
         # перемещение по горизонтали
         if 20 + self.rect.x // 2 <= self.pos.x + self.direction.x * self.speed * dt <= SCREEN_WIDTH - 20:
-            self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+
+
+
+            self.statx = self.statx + self.staty
+            if self.statx:
+                self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+                print(self.pos.x + self.direction.x * self.speed * dt, self.pos.y + self.direction.y * self.speed * dt)
+                print(current_x, current_y)
+                print(self.statx, self.staty)
+            else:
+                self.pos.x += 0
+                print(self.statx, self.staty)
+
             self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
 
         # перемещение по вертикали
         if 30 <= self.pos.y + self.direction.y * self.speed * dt <= (SCREEN_HEIGHT - 30):
-            self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+            self.staty = self.staty + self.statx
+            if self.staty:
+                self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+                print(self.pos.x + self.direction.x * self.speed * dt, self.pos.y + self.direction.y * self.speed * dt)
+                print(current_x, current_y)
+                print(self.statx, self.staty)
+            else:
+                self.pos.y += 0
+                print(self.statx, self.staty)
+
             self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
 
     def update(self, dt):
