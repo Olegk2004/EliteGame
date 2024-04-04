@@ -3,6 +3,7 @@ from settings import *
 from timer import Timer
 
 
+
 class PlanetPlayer(pygame.sprite.Sprite):
     def __init__(self, pos, group, coll_pos):
         super().__init__(group)
