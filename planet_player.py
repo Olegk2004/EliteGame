@@ -96,16 +96,24 @@ class PlanetPlayer(pygame.sprite.Sprite):
         pass
 
     def move(self, dt):
-        current_x = [col_pos[0] for col_pos in self.coll_pos] # все иксы осязаемых объектов
-        current_y = [col_pos[1] for col_pos in self.coll_pos]# все игреки
-        for i in range(len(current_x)):
-            if abs(current_x[i] - self.pos.x - self.direction.x * self.speed * dt) <= EPS  : # если близко подошли к икс координате осязаемого объекта
-                self.statx = 0
-                break
+        for i in range(len(self.coll_pos)):
 
-        for i in range(len(current_y)):
-            if abs(current_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS: # если к игрек координате
-                self.staty = 0
+            current_x = [col_pos[0] for col_pos in self.coll_pos[i]] # все иксы осязаемых объектов
+            current_y = [col_pos[1] for col_pos in self.coll_pos[i]]# все игреки
+            for i in range(len(current_x)):
+                if abs(current_x[i] - self.pos.x - self.direction.x * self.speed * dt) <= EPS  : # если близко подошли к икс координате осязаемого объекта
+                    self.statx = 0
+                    break
+                else:
+                    self.statx = 1
+
+            for i in range(len(current_y)):
+                if abs(current_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS: # если к игрек координате
+                    self.staty = 0
+                    break
+                else:
+                    self.staty = 1
+            if self.staty + self.statx == 0:
                 break
         # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
         if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
