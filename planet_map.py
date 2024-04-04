@@ -54,12 +54,9 @@ class PlanetMap:
 
         self.planet_enemies = {}
         self.enemies_overlays = {}
-        # for i in range(NUM_OF_ENEMIES): # в сеттингс добавил кол-во врагов, пока закомментил
-        # self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player, self.bullet_group,
-        # self.all_sprites, (500, 100 + i * 100))
-        # self.enemies_overlays['enemy_' + str(i)] = Overlay(self.display_surface,
-        # self.planet_enemies['enemy_' + str(i)])
-
+        for i in range(NUM_OF_ENEMIES): # в сеттингс добавил кол-во врагов, пока закомментил
+            self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player, self.bullet_group,
+                                                                 self.all_sprites, coll_pos, (500, 100 + i * 100))
         self.overlay = Overlay(self.display_surface, self.planet_player)
 
     def draw(self, dt):
@@ -76,10 +73,10 @@ class PlanetMap:
                         if len(self.coll) == 0:
                             self.coll.append([x * 32, y * 32])  # добавляем позиции осязаемого объекта
                             continue
-                        current_x = [col_pos[0] for col_pos in self.coll]  # все иксы осязаемых объектов
-                        current_y = [col_pos[1] for col_pos in self.coll]  # все игреки
-                        new_x = [abs(xx - x * 32) for xx in current_x]
-                        new_y = [abs(yy - y * 32) for yy in current_y]
+                        colliding_x = [col_pos[0] for col_pos in self.coll]  # все иксы осязаемых объектов
+                        colliding_y = [col_pos[1] for col_pos in self.coll]  # все игреки
+                        new_x = [abs(xx - x * 32) for xx in colliding_x]
+                        new_y = [abs(yy - y * 32) for yy in colliding_y]
                         if min(new_x) <= 32 and min(new_y) == 0 or min(new_y) <= 32 and min(new_x) == 0 :
                             self.coll.append([x * 32, y * 32])  # добавляем позиции осязаемого объекта
                         else:
@@ -97,7 +94,9 @@ class PlanetMap:
         for sprite in sorted(self.all_sprites, key=lambda sprite: sprite.rect.centery):
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
 
-        self.bullet_group.draw(self.display_surface)
+        for bullet in self.bullet_group:
+            self.display_surface.blit(bullet.image, self.camera.apply(bullet))
+
         self.all_sprites.update(dt)
         self.bullet_group.update(dt)
         # for overlay in self.enemies_overlays.values():
