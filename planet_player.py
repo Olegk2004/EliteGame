@@ -3,7 +3,6 @@ from settings import *
 from timer import Timer
 
 
-
 class PlanetPlayer(pygame.sprite.Sprite):
     def __init__(self, pos, group, coll_pos):
         super().__init__(group)
@@ -35,7 +34,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
 
     def import_image(self):
         path = "Images/player_" + self.image_status + "_" + str(int(self.image_frame) + 1) + ".png"
-        now_image = pygame.image.load(path)
+        now_image = pygame.image.load(path).convert_alpha()
         now_image = pygame.transform.scale(now_image, (50, 70))
         return now_image
 
@@ -128,12 +127,10 @@ class PlanetPlayer(pygame.sprite.Sprite):
             self.statx = self.statx + self.staty
             if self.statx:
                 self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
-                print(self.pos.x + self.direction.x * self.speed * dt, self.pos.y + self.direction.y * self.speed * dt)
-                print(current_x, current_y)
-                print(self.statx, self.staty)
+
             else:
                 self.pos.x += 0
-                print(self.statx, self.staty)
+
 
             self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
 
@@ -142,12 +139,10 @@ class PlanetPlayer(pygame.sprite.Sprite):
             self.staty = self.staty + self.statx
             if self.staty:
                 self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
-                print(self.pos.x + self.direction.x * self.speed * dt, self.pos.y + self.direction.y * self.speed * dt)
-                print(current_x, current_y)
-                print(self.statx, self.staty)
+
             else:
                 self.pos.y += 0
-                print(self.statx, self.staty)
+
 
             self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
 
