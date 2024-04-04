@@ -10,24 +10,28 @@ from overlay import Overlay
 from pytmx.util_pygame import load_pygame
 
 
-# pip install pytmx
-
-class Collisions(pygame.sprite.Sprite):  # пока не использую, мало ли пригодиться( класс осязаемых объектов)
-    def __init__(self, pos, image):
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, image, x, y):
         super().__init__()
         self.image = image
-        self.rect = self.image.get_rect(center=pos)
-
-        # movement attributes
-        self.direction = pygame.math.Vector2()  # направление, определяется вектором. Во время обновления координаты игрока меняются в зависимости от направления
-        self.pos = pygame.math.Vector2(self.rect.center)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 
-class Tile(pygame.sprite.Sprite):  # пока не использую, класс тайл-карт
-    def __init__(self, pos, surf):
-        super().__init__()
-        self.image = surf
-        self.rect = self.image.get_rect(topleft=pos)
+class Camera:
+    def __init__(self, width, height):
+        self.rect = pygame.Rect(0, 0, width, height)
+        self.width = width
+        self.height = height
+
+    def apply(self, entity):
+        return entity.rect.move(self.rect.topleft)
+
+    def update(self, target):
+        x = -target.rect.centerx + int(self.width / 2)
+        y = -target.rect.centery + int(self.height / 2)
+        self.rect = pygame.Rect(x, y, self.width, self.height)
 
 
 class PlanetMap:
@@ -41,6 +45,7 @@ class PlanetMap:
         self.switch = 0
         self.coll = []  # массив позиций
         self.colls = []
+        self.camera = Camera(self.display_surface.get_width(), self.display_surface.get_height())
         # self.setup()
 
     def setup(self, coll_pos):
@@ -66,7 +71,7 @@ class PlanetMap:
             if hasattr(layer, 'data'):  # необязательно
                 for x, y, surf in layer.tiles():  # каждый икс и игрек и поверхность(рисуночек тайла отдельного) текущего уровня
                     pos = (x * 32, y * 32)  # tile выравниваем каждый тайл
-                    tile = Tile(pos=pos, surf=surf)  # пока не надо
+
                     if layer.name == "second" and self.stat2 != 0:  # если это тайл второго уровня(гле осязаемые объекты) и при этом мы добавляли его позиции ниразу, то
                         if len(self.coll) == 0:
                             self.coll.append([x * 32, y * 32])  # добавляем позиции осязаемого объекта
@@ -81,16 +86,16 @@ class PlanetMap:
                             self.colls.append(self.coll)
                             self.coll = []
                             self.coll.append([x * 32, y * 32])
-                        print(len(self.coll), self.coll, self.colls)
 
-                    self.display_surface.blit(surf, pos)  # блитуем
+                    tile = Tile(surf, pos[0], pos[1])
+                    self.display_surface.blit(tile.image, self.camera.apply(tile))
+        # блитуем
         if self.switch == 0:
             self.colls.append(self.coll)
             self.switch = 1
-            print("here - ", self.colls)
 
         for sprite in sorted(self.all_sprites, key=lambda sprite: sprite.rect.centery):
-            self.display_surface.blit(sprite.image, sprite.rect.topleft)
+            self.display_surface.blit(sprite.image, self.camera.apply(sprite))
 
         self.bullet_group.draw(self.display_surface)
         self.all_sprites.update(dt)
@@ -103,3 +108,4 @@ class PlanetMap:
             self.stat2 = 0
 
         self.overlay.display()
+        self.camera.update(self.planet_player)
