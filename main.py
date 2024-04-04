@@ -11,7 +11,17 @@ from planet_map import PlanetMap
 
 import galaxy_map
 import numpy as np
-
+class Camera:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.camera = pygame.Rect(0, 0, width, height)
+    def apply(self, entity):
+        return entity.rect.move(self.camera.topleft)
+    def update(self, target):
+        x = -target.rect.x + int(SCREEN_WIDTH / 2)
+        y = -target.rect.y + int(SCREEN_HEIGHT / 2)
+        self.camera = pygame.Rect(x, y, self.width, self.height)
 
 class Game:
     def __init__(self):
@@ -28,6 +38,8 @@ class Game:
         self.galaxy = Galaxy(0x5A4A, 0x0248, 0xB753)  # Создаем галактику с определенным сидом
         self.galaxy.make_systems()  # создаем планеты в галактике
         self.galaxy.create_matches()  # определяем для каждой планеты список доступных для прыжка
+
+        self.camera = Camera(MAP_WIDTH, MAP_HEIGHT)
 
         # создаем игрока
         self.player = Player(self.galaxy)
@@ -132,7 +144,7 @@ class Game:
                     pygame.mouse.get_pos())  # определяем позицию мышки, чтобы передать ее в функцию draw
                 self.galaxy_map.draw_side_panel(self.screen, self.player.fuel, ration, checked_mouse)
             else:
-                dt = self.clock.tick(300) / 1000
+                dt = self.clock.tick(300) / 1200
                 self.planet_map.draw(dt)
 
             # debug(str(pygame.mouse.get_pos()))  # Прикольно да))
@@ -140,6 +152,7 @@ class Game:
 
             F.tick(FPS)
             pygame.display.update()
+
 
 
 if __name__ == '__main__':
