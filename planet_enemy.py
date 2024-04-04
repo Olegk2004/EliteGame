@@ -23,11 +23,12 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class PlanetEnemy(pygame.sprite.Sprite):
-    def __init__(self, target, bullet_group, group, pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
+    def __init__(self, target, bullet_group, group, coll_pos, pos=(random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT))):
         super().__init__(group)
         self.bullet_group = bullet_group
 
         self.target = target
+        self.coll_pos = coll_pos
 
         self.image_status = "idle"
         self.image_frame = 1
@@ -61,8 +62,25 @@ class PlanetEnemy(pygame.sprite.Sprite):
 
         # Оружие
         self.tools = ['sword', 'gun']
+        self.tools_sprites = {}
+        self.import_tools_sprites()
         self.tool_index = random.randint(0, len(self.tools) - 1)
         self.selected_tool = self.tools[self.tool_index]
+
+    def import_tools_sprites(self):
+        for tool in self.tools:
+            path = "Images/tools/" + tool + ".png"
+            try:
+                tool_sprite = pygame.image.load(path).convert_alpha()
+                tool_sprite = pygame.transform.scale(tool_sprite, (20, 20))
+            except FileNotFoundError:
+                if tool == 'hand':
+                    tool_sprite = pygame.surface.Surface((20, 20))
+                    tool_sprite.fill('green')
+                if tool == 'gun':
+                    tool_sprite = pygame.surface.Surface((20, 20))
+                    tool_sprite.fill('pink')
+            self.tools_sprites[tool] = tool_sprite
 
     def import_image(self):
         now_image = pygame.Surface((40, 60))
@@ -100,7 +118,6 @@ class PlanetEnemy(pygame.sprite.Sprite):
                 self.timers['fire delay'].activate()
             self.timers['reload'].activate()
 
-
     def animate(self, dt):
         self.image_frame += 4 * dt
         if self.image_frame >= 4:  # больше 3, потому что количество спрайтов для анимации равно 3
@@ -108,6 +125,25 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.image = self.import_image()
 
     def move(self, dt):
+        for i in range(len(self.coll_pos)):
+            colliding_x = [col_pos[0] for col_pos in self.coll_pos[i]]  # все иксы осязаемых объектов
+            colliding_y = [col_pos[1] for col_pos in self.coll_pos[i]]  # все игреки
+            for i in range(len(colliding_x)):
+                if abs(colliding_x[i] - self.pos.x - self.direction.x * self.speed * dt) <= EPS:  # если близко подошли к икс координате осязаемого объекта
+                    self.statx = 0
+                    break
+                else:
+                    self.statx = 1
+
+            for i in range(len(colliding_y)):
+                if abs(colliding_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS:  # если к игрек координате
+                    self.staty = 0
+                    break
+                else:
+                    self.staty = 1
+            if self.staty + self.statx == 0:
+                break
+
         if not self.timers['shot'].active:
 
             if 30 < self.dist < 300:
