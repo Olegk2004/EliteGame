@@ -12,5 +12,5 @@ class Overlay:
 
     def display(self):
         tool_surf = self.tools_surf[self.planet_player.tool_index]
-        tool_rect = tool_surf.get_rect(topleft=(self.planet_player.rect.topleft[0] - 5, self.planet_player.rect.topleft[1] - 5))
-        self.display_surface.blit(tool_surf, tool_rect)
+        #tool_rect = tool_surf.get_rect(topleft=(self.planet_player.rect.topleft[0] - 5, self.planet_player.rect.topleft[1] - 5))
+        #self.display_surface.blit(tool_surf, tool_rect)
