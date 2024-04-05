@@ -23,12 +23,11 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class PlanetEnemy(pygame.sprite.Sprite):
-    def __init__(self, target, bullet_group, group, coll_pos, pos=(random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT))):
+    def __init__(self, target, bullet_group, group,coll_pos, pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
         super().__init__(group)
         self.bullet_group = bullet_group
 
         self.target = target
-        self.coll_pos = coll_pos
 
         self.image_status = "idle"
         self.image_frame = 1
@@ -48,7 +47,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
             'fire delay': Timer(50),
             'reload': Timer(1000)
         }
-
+        self.coll_pos = coll_pos
         self.image = self.import_image()
         self.rect = self.image.get_rect(center=pos)
 
@@ -62,25 +61,8 @@ class PlanetEnemy(pygame.sprite.Sprite):
 
         # Оружие
         self.tools = ['sword', 'gun']
-        self.tools_sprites = {}
-        self.import_tools_sprites()
         self.tool_index = random.randint(0, len(self.tools) - 1)
         self.selected_tool = self.tools[self.tool_index]
-
-    def import_tools_sprites(self):
-        for tool in self.tools:
-            path = "Images/tools/" + tool + ".png"
-            try:
-                tool_sprite = pygame.image.load(path).convert_alpha()
-                tool_sprite = pygame.transform.scale(tool_sprite, (20, 20))
-            except FileNotFoundError:
-                if tool == 'hand':
-                    tool_sprite = pygame.surface.Surface((20, 20))
-                    tool_sprite.fill('green')
-                if tool == 'gun':
-                    tool_sprite = pygame.surface.Surface((20, 20))
-                    tool_sprite.fill('pink')
-            self.tools_sprites[tool] = tool_sprite
 
     def import_image(self):
         now_image = pygame.Surface((40, 60))
@@ -118,59 +100,68 @@ class PlanetEnemy(pygame.sprite.Sprite):
                 self.timers['fire delay'].activate()
             self.timers['reload'].activate()
 
+
     def animate(self, dt):
         self.image_frame += 4 * dt
         if self.image_frame >= 4:  # больше 3, потому что количество спрайтов для анимации равно 3
             self.image_frame = 0
         self.image = self.import_image()
 
-    def move(self, dt):
+    def move(self, dt, objects):
         for i in range(len(self.coll_pos)):
-            colliding_x = [col_pos[0] for col_pos in self.coll_pos[i]]  # все иксы осязаемых объектов
-            colliding_y = [col_pos[1] for col_pos in self.coll_pos[i]]  # все игреки
-            for i in range(len(colliding_x)):
-                if abs(colliding_x[i] - self.pos.x - self.direction.x * self.speed * dt) <= EPS:  # если близко подошли к икс координате осязаемого объекта
+            current_x = [col_pos[0] for col_pos in self.coll_pos[i]]  # все иксы осязаемых объектов
+            current_y = [col_pos[1] for col_pos in self.coll_pos[i]]  # все игреки
+            for i in range(len(current_x)):
+                if abs(current_x[i] + 15 - self.pos.x - self.direction.x * self.speed * dt) <= EPS:
                     self.statx = 0
                     break
                 else:
                     self.statx = 1
 
-            for i in range(len(colliding_y)):
-                if abs(colliding_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS:  # если к игрек координате
+            for i in range(len(current_y)):
+                if abs(current_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS:
                     self.staty = 0
                     break
                 else:
                     self.staty = 1
+
             if self.staty + self.statx == 0:
                 break
 
-        if not self.timers['shot'].active:
+        if self.direction.magnitude() > 0:
+            self.direction = self.direction.normalize()
 
-            if 30 < self.dist < 300:
-                self.direction.x = int(math.copysign(1, self.dx))  # -1 если враг справа от игрока, 1 если слева
-                self.direction.y = int(math.copysign(1, self.dy))  # -1 если враг снизу от игрока, 1 если сверху
-            else:
-                self.direction = pygame.Vector2()
-
-            if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
-                self.direction = self.direction.normalize()
-            # перемещение по горизонтали
-            if 20 + self.rect.x // 2 <= self.pos.x + self.direction.x * self.speed * dt <= SCREEN_WIDTH - 20:
+        if 20 + self.rect.x // 2 <= self.pos.x + self.direction.x * self.speed * dt <= SCREEN_WIDTH - 20:
+            self.statx = self.statx + self.staty
+            if self.statx:
                 self.pos.x += self.direction.x * self.speed * dt
-                #self.pos.x += random.randint(0, self.speed) * dt
-                self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию врага
-            # перемещение по вертикали
-            if 30 <= self.pos.y + self.direction.y * self.speed * dt <= (SCREEN_HEIGHT - 30):
+            else:
+                self.pos.x += 0
+
+            self.rect.centerx = self.pos.x
+
+        if 30 <= self.pos.y + self.direction.y * self.speed * dt <= (SCREEN_HEIGHT - 30):
+            self.staty = self.staty + self.statx
+            if self.staty:
                 self.pos.y += self.direction.y * self.speed * dt
-                #self.pos.y += random.randint(0, self.speed) * dt
-                self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию врага
-            self.dx = self.target.pos[0] - self.pos[0]
-            self.dy = self.target.pos[1] - self.pos[1]
-            self.dist = math.hypot(self.dx, self.dy)
+            else:
+                self.pos.y += 0
+
+            self.rect.centery = self.pos.y
+
+        self.dx = self.target.pos[0] - self.pos[0]
+        self.dy = self.target.pos[1] - self.pos[1]
+        self.dist = math.hypot(self.dx, self.dy)
+
+        if 30 < self.dist < 300:
+            self.direction.x = int(math.copysign(1, self.dx))
+            self.direction.y = int(math.copysign(1, self.dy))
+        else:
+            self.direction = pygame.Vector2()
 
     def update(self, dt):
         self.update_timers()
         if self.selected_tool == 'gun':
             self.try_shoot()
-        self.move(dt)
+        self.move(dt, self.coll_pos)
         self.animate(dt)
