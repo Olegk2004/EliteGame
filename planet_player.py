@@ -11,21 +11,20 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.image_frame = 1  # для реализации анимации
         # для анимации нужны несколько картиок в одном направлении, чтобы они менялись каждые несколько милисекунд
 
-        self.image = self.import_image()
+        self.image = self.import_image().convert_alpha()
         self.rect = self.image.get_rect(center=pos)
 
         # movement attributes
         self.direction = pygame.math.Vector2()  # направление, определяется вектором. Во время обновления координаты игрока меняются в зависимости от направления
         self.pos = pygame.math.Vector2(self.rect.center)  # координаты игрока
         self.speed = 200
-        self.max_hp = 1000
-        self.hp = 1000
-        self.max_stamina = 500
-        self.stamina = 500
-
         self.coll_pos = coll_pos
+        #fkags
         self.statx = 1
         self.staty = 1
+        # mask
+        self.objects = coll_pos
+        self.mask = pygame.mask.from_surface(self.image)
         # Таймеры
         self.timers = {
             'tool use': Timer(350, self.use_tool),
@@ -33,26 +32,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
         }
 
         # Инструменты
-        self.tools = ['hand', 'sword', 'gun']
-        self.tools_sprites = {}
-        self.import_tools_sprites()
+        self.tools = ['hand', 'gun']
         self.tool_index = 0
         self.selected_tool = self.tools[self.tool_index]
-
-    def import_tools_sprites(self):
-        for tool in self.tools:
-            path = "Images/tools/" + tool + ".png"
-            try:
-                tool_sprite = pygame.image.load(path).convert_alpha()
-                tool_sprite = pygame.transform.scale(tool_sprite, (50, 50))
-            except FileNotFoundError:
-                if tool == 'hand':
-                    tool_sprite = pygame.surface.Surface((50, 50))
-                    tool_sprite.fill('green')
-                if tool == 'gun':
-                    tool_sprite = pygame.surface.Surface((50, 50))
-                    tool_sprite.fill('pink')
-            self.tools_sprites[tool] = tool_sprite
 
     def import_image(self):
         path = "Images/player_" + self.image_status + "_" + str(int(self.image_frame) + 1) + ".png"
@@ -65,6 +47,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.image_frame += 4 * dt
         if self.image_frame >= 4:  # больше 3, потому что количество спрайтов для анимации равно 3
             self.image_frame = 0
+
         self.image = self.import_image()
 
     def input(self):
@@ -117,19 +100,21 @@ class PlanetPlayer(pygame.sprite.Sprite):
     def use_tool(self):
         pass
 
-    def move(self, dt):
+    def move(self, dt, objects):
         for i in range(len(self.coll_pos)):
-            colliding_x = [col_pos[0] for col_pos in self.coll_pos[i]]  # все иксы осязаемых объектов
-            colliding_y = [col_pos[1] for col_pos in self.coll_pos[i]]  # все игреки
-            for i in range(len(colliding_x)):
-                if abs(colliding_x[i] - self.pos.x - self.direction.x * self.speed * dt) <= EPS:  # если близко подошли к икс координате осязаемого объекта
+
+            current_x = [col_pos[0] for col_pos in self.coll_pos[i]] # все иксы осязаемых объектов
+            current_y = [col_pos[1] for col_pos in self.coll_pos[i]]# все игреки
+            for i in range(len(current_x)):
+
+                if abs(current_x[i] + 15 - self.pos.x - self.direction.x * self.speed * dt) <= EPS  : # если близко подошли к икс координате осязаемого объекта
                     self.statx = 0
                     break
                 else:
                     self.statx = 1
 
-            for i in range(len(colliding_y)):
-                if abs(colliding_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS:  # если к игрек координате
+            for i in range(len(current_y)):
+                if abs(current_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS: # если к игрек координате
                     self.staty = 0
                     break
                 else:
@@ -171,5 +156,5 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.input()
         self.update_timers()
 
-        self.move(dt)
+        self.move(dt, self.objects)
         self.animate(dt)
