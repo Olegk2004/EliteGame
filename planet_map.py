@@ -56,7 +56,10 @@ class PlanetMap:
         self.enemies_overlays = {}
         for i in range(NUM_OF_ENEMIES): # в сеттингс добавил кол-во врагов, пока закомментил
             self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player, self.bullet_group,
-                                                                 self.all_sprites, coll_pos, (500, 100 + i * 100))
+            self.all_sprites,  coll_pos, (500, 100 + i * 100))
+            self.enemies_overlays['enemy_' + str(i)] = Overlay(self.display_surface,
+            self.planet_enemies['enemy_' + str(i)])
+
         self.overlay = Overlay(self.display_surface, self.planet_player)
 
     def draw(self, dt):
@@ -71,18 +74,18 @@ class PlanetMap:
 
                     if layer.name == "second" and self.stat2 != 0:  # если это тайл второго уровня(гле осязаемые объекты) и при этом мы добавляли его позиции ниразу, то
                         if len(self.coll) == 0:
-                            self.coll.append([x * 32, y * 32])  # добавляем позиции осязаемого объекта
+                            self.coll.append([x * 32, y * 32, surf])  # добавляем позиции осязаемого объекта
                             continue
-                        colliding_x = [col_pos[0] for col_pos in self.coll]  # все иксы осязаемых объектов
-                        colliding_y = [col_pos[1] for col_pos in self.coll]  # все игреки
-                        new_x = [abs(xx - x * 32) for xx in colliding_x]
-                        new_y = [abs(yy - y * 32) for yy in colliding_y]
+                        current_x = [col_pos[0] for col_pos in self.coll]  # все иксы осязаемых объектов
+                        current_y = [col_pos[1] for col_pos in self.coll]  # все игреки
+                        new_x = [abs(xx - x * 32) for xx in current_x]
+                        new_y = [abs(yy - y * 32) for yy in current_y]
                         if min(new_x) <= 32 and min(new_y) == 0 or min(new_y) <= 32 and min(new_x) == 0 :
-                            self.coll.append([x * 32, y * 32])  # добавляем позиции осязаемого объекта
+                            self.coll.append([x * 32, y * 32, surf])  # добавляем позиции осязаемого объекта
                         else:
                             self.colls.append(self.coll)
                             self.coll = []
-                            self.coll.append([x * 32, y * 32])
+                            self.coll.append([x * 32, y * 32, surf])
 
                     tile = Tile(surf, pos[0], pos[1])
                     self.display_surface.blit(tile.image, self.camera.apply(tile))
@@ -94,17 +97,15 @@ class PlanetMap:
         for sprite in sorted(self.all_sprites, key=lambda sprite: sprite.rect.centery):
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
 
-        for bullet in self.bullet_group:
-            self.display_surface.blit(bullet.image, self.camera.apply(bullet))
-
+        self.bullet_group.draw(self.display_surface)
         self.all_sprites.update(dt)
         self.bullet_group.update(dt)
-        # for overlay in self.enemies_overlays.values():
-        # overlay.display()
+
         if self.stat == 0:  # меняем необходимые флаги
             self.setup(self.colls)  # передаём позиции осязаемых позиций
             self.stat = 1
             self.stat2 = 0
-
+        #for overlay in self.enemies_overlays.values():
+            #overlay.display()
         self.overlay.display()
         self.camera.update(self.planet_player)
