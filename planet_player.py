@@ -18,6 +18,10 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2()  # направление, определяется вектором. Во время обновления координаты игрока меняются в зависимости от направления
         self.pos = pygame.math.Vector2(self.rect.center)  # координаты игрока
         self.speed = 200
+        self.max_hp = 1000
+        self.hp = 1000
+        self.max_stamina = 500
+        self.stamina = 500
         self.coll_pos = coll_pos
         #fkags
         self.statx = 1
@@ -32,7 +36,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
         }
 
         # Инструменты
-        self.tools = ['hand', 'gun']
+        self.tools = ['hand', 'sword', 'gun']
+        self.tools_sprites = {}
+        self.import_tools_sprites()
         self.tool_index = 0
         self.selected_tool = self.tools[self.tool_index]
 
@@ -41,6 +47,21 @@ class PlanetPlayer(pygame.sprite.Sprite):
         now_image = pygame.image.load(path).convert_alpha()
         now_image = pygame.transform.scale(now_image, (50, 70))
         return now_image
+
+    def import_tools_sprites(self):
+        for tool in self.tools:
+            path = "Images/tools/" + tool + ".png"
+            try:
+                tool_sprite = pygame.image.load(path).convert_alpha()
+                tool_sprite = pygame.transform.scale(tool_sprite, (50, 50))
+            except FileNotFoundError:
+                if tool == 'hand':
+                    tool_sprite = pygame.surface.Surface((50, 50))
+                    tool_sprite.fill('green')
+                if tool == 'gun':
+                    tool_sprite = pygame.surface.Surface((50, 50))
+                    tool_sprite.fill('pink')
+            self.tools_sprites[tool] = tool_sprite
 
     def animate(self, dt):
 

@@ -56,9 +56,7 @@ class PlanetMap:
         self.enemies_overlays = {}
         for i in range(NUM_OF_ENEMIES): # в сеттингс добавил кол-во врагов, пока закомментил
             self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player, self.bullet_group,
-            self.all_sprites,  coll_pos, (500, 100 + i * 100))
-            self.enemies_overlays['enemy_' + str(i)] = Overlay(self.display_surface,
-            self.planet_enemies['enemy_' + str(i)])
+                                                                 self.all_sprites,  coll_pos, (500, 100 + i * 100))
 
         self.overlay = Overlay(self.display_surface, self.planet_player)
 
@@ -97,7 +95,8 @@ class PlanetMap:
         for sprite in sorted(self.all_sprites, key=lambda sprite: sprite.rect.centery):
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
 
-        self.bullet_group.draw(self.display_surface)
+        for bullet in self.bullet_group:
+            self.display_surface.blit(bullet.image, self.camera.apply(bullet))
         self.all_sprites.update(dt)
         self.bullet_group.update(dt)
 
