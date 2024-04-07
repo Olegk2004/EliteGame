@@ -11,17 +11,22 @@ from planet_map import PlanetMap
 
 import galaxy_map
 import numpy as np
+
+
 class Camera:
     def __init__(self, width, height):
         self.width = width
         self.height = height
         self.camera = pygame.Rect(0, 0, width, height)
+
     def apply(self, entity):
         return entity.rect.move(self.camera.topleft)
+
     def update(self, target):
         x = -target.rect.x + int(SCREEN_WIDTH / 2)
         y = -target.rect.y + int(SCREEN_HEIGHT / 2)
         self.camera = pygame.Rect(x, y, self.width, self.height)
+
 
 class Game:
     def __init__(self):
@@ -57,7 +62,6 @@ class Game:
         self.galaxy_map = Map(self.galaxy, self.player)
 
     def run(self):
-
         # Для полоски
         ration = 0
         F = pygame.time.Clock()
@@ -86,7 +90,9 @@ class Game:
                         if clicked_planet:  # если курсор на планете
 
                             self.player.bar_save = self.player.fuel
-                            self.player.jump(clicked_planet)  # совершаем прыжок
+                            jump_done = self.player.jump(clicked_planet)  # совершаем прыжок
+                            if not jump_done:
+                                self.galaxy_map.out_of_fuel()
                             self.planet_map = PlanetMap(self.player.current_planet)
 
                             self.galaxy_map.camera_group.camera_rect = self.galaxy_map.camera_group.camera_rect_setup()
@@ -136,10 +142,12 @@ class Game:
                         self.galaxy_map.camera_group.center_target_camera(self.player.current_planet)
 
                 if event.type == pygame.MOUSEWHEEL:
-                    if event.y > 0 and self.galaxy_map.camera_group.zoom_scale - 2 < 0.085:
-                        self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
-                    if event.y < 0 and self.galaxy_map.camera_group.zoom_scale - 0.20 > 0.085 and self.galaxy_map.camera_group.zoom_scale + event.y * 0.05 > 0.25: # )
-                        self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
+                    if pygame.mouse.get_pos()[0] < MAP_PANEL_WIDTH:
+                        if event.y > 0 and self.galaxy_map.camera_group.zoom_scale - 2 < 0.085:
+                            self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
+                        if event.y < 0 and self.galaxy_map.camera_group.zoom_scale - 0.20 > 0.085 and \
+                                self.galaxy_map.camera_group.zoom_scale + event.y * 0.05 > 0.25: # )
+                            self.galaxy_map.camera_group.zoom_scale += event.y * 0.05
 
             self.screen.fill((0, 0, 0))  # обновляем экран заливая всю поверхность черным цветом
 
@@ -157,7 +165,6 @@ class Game:
 
             F.tick(FPS)
             pygame.display.update()
-
 
 
 if __name__ == '__main__':
