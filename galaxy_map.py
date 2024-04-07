@@ -26,6 +26,8 @@ class CameraGroup(pygame.sprite.Group):
         self.player = player
 
         for system in self.galaxy.systems:
+            system.x += MAP_WIDTH // 8
+            system.y += MAP_HEIGHT // 8
             if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
                 system.sprite = Planet(CURRENT_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 5, self)
             elif system in self.player.visited_planets:  # если это посещенная планета, то другим
@@ -45,14 +47,10 @@ class CameraGroup(pygame.sprite.Group):
 
         # box setup
         self.camera_borders = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
-        l = self.camera_borders['left']
-        t = self.camera_borders['top']
-        w = self.display_surface.get_size()[0] - (self.camera_borders['left'] + self.camera_borders['right'])
-        h = self.display_surface.get_size()[1] - (self.camera_borders['top'] + self.camera_borders['bottom'])
-        self.camera_rect = pygame.Rect(l, t, w, h)
+        self.camera_rect = self.camera_rect_setup()
 
         background_image = pygame.image.load('Images/galaxy_map_square_background.png').convert_alpha()
-        self.background_surf = pygame.transform.scale(background_image, (MAP_WIDTH, MAP_HEIGHT))
+        self.background_surf = pygame.transform.scale(background_image, (MAP_WIDTH * 1.25, MAP_HEIGHT * 1.25))
         self.background_rect = self.background_surf.get_rect(topleft=(0, 0))
 
         # camera speed
@@ -72,9 +70,16 @@ class CameraGroup(pygame.sprite.Group):
         self.scaled_surf = None
         self.scaled_rect = None
 
+    def camera_rect_setup(self):
+        l = self.camera_borders['left']
+        t = self.camera_borders['top']
+        w = self.display_surface.get_size()[0] - (self.camera_borders['left'] + self.camera_borders['right'])
+        h = self.display_surface.get_size()[1] - (self.camera_borders['top'] + self.camera_borders['bottom'])
+        return pygame.Rect(l, t, w, h)
+
     def center_target_camera(self, target):
-        self.offset = pygame.math.Vector2(self.player.current_planet.sprite.rect.centerx - self.half_w,
-                                          self.player.current_planet.sprite.rect.centery - self.half_h)
+        self.offset = pygame.math.Vector2(target.sprite.rect.centerx - self.half_w,
+                                          target.sprite.rect.centery - self.half_h)
 
     def keyboard_control(self):
         keys = pygame.key.get_pressed()
@@ -102,7 +107,7 @@ class CameraGroup(pygame.sprite.Group):
         self.keyboard_control()
         self.zoom_keyboard_control()
 
-        self.internal_surf.fill('black')
+        self.internal_surf.fill((20, 20, 20))
         background_offset = self.background_rect.topleft - self.offset + self.internal_offset
         self.internal_surf.blit(self.background_surf, background_offset)
 

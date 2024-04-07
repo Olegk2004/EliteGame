@@ -63,7 +63,7 @@ class Game:
         F = pygame.time.Clock()
         # Запускаем музыку
         pygame.mixer.music.play(-1)
-        music_is_muted = False  # изначально музыка играет, чтобы ее выключить надо нажать "m"
+        music_is_muted = False  # изначально музыка играет, чтобы ее выключить надо нажать "M"
         music_mode = "space"  # переменная определяющая какой трек сейчас играет
 
         # Запуск цикла обновления игры, который остановится только когда пользователь выйдет из игры
@@ -88,6 +88,9 @@ class Game:
                             self.player.bar_save = self.player.fuel
                             self.player.jump(clicked_planet)  # совершаем прыжок
                             self.planet_map = PlanetMap(self.player.current_planet)
+
+                            self.galaxy_map.camera_group.camera_rect = self.galaxy_map.camera_group.camera_rect_setup()
+                            self.galaxy_map.camera_group.center_target_camera(self.player.current_planet)
 
                             ration = 100
 
@@ -129,6 +132,8 @@ class Game:
                             music_mode = "space"
                     elif event.key == pygame.K_r:  # Нажатие на кнопку "R" возвращает зум в исходное состояние
                         self.galaxy_map.camera_group.zoom_scale = 1
+                        self.galaxy_map.camera_group.camera_rect = self.galaxy_map.camera_group.camera_rect_setup()
+                        self.galaxy_map.camera_group.center_target_camera(self.player.current_planet)
 
                 if event.type == pygame.MOUSEWHEEL:
                     if event.y > 0 and self.galaxy_map.camera_group.zoom_scale - 2 < 0.085:
