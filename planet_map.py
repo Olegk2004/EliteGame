@@ -68,22 +68,22 @@ class PlanetMap:
 
             if hasattr(layer, 'data'):  # необязательно
                 for x, y, surf in layer.tiles():  # каждый икс и игрек и поверхность(рисуночек тайла отдельного) текущего уровня
-                    pos = (x * 32, y * 32)  # tile выравниваем каждый тайл
+                    pos = (x * TILE_SIZE, y * TILE_SIZE)  # tile выравниваем каждый тайл
 
                     if layer.name == "second" and self.stat2 != 0:  # если это тайл второго уровня(гле осязаемые объекты) и при этом мы добавляли его позиции ниразу, то
                         if len(self.coll) == 0:
-                            self.coll.append([x * 32, y * 32, surf])  # добавляем позиции осязаемого объекта
+                            self.coll.append([x * TILE_SIZE, y * 32, TILE_SIZE])  # добавляем позиции осязаемого объекта
                             continue
                         current_x = [col_pos[0] for col_pos in self.coll]  # все иксы осязаемых объектов
                         current_y = [col_pos[1] for col_pos in self.coll]  # все игреки
-                        new_x = [abs(xx - x * 32) for xx in current_x]
-                        new_y = [abs(yy - y * 32) for yy in current_y]
+                        new_x = [abs(xx - x * TILE_SIZE) for xx in current_x]
+                        new_y = [abs(yy - y * TILE_SIZE) for yy in current_y]
                         if min(new_x) <= 32 and min(new_y) == 0 or min(new_y) <= 32 and min(new_x) == 0 :
-                            self.coll.append([x * 32, y * 32, surf])  # добавляем позиции осязаемого объекта
+                            self.coll.append([x * TILE_SIZE, y * TILE_SIZE, surf])  # добавляем позиции осязаемого объекта
                         else:
                             self.colls.append(self.coll)
                             self.coll = []
-                            self.coll.append([x * 32, y * 32, surf])
+                            self.coll.append([x * TILE_SIZE, y * TILE_SIZE, surf])
 
                     tile = Tile(surf, pos[0], pos[1])
                     self.display_surface.blit(tile.image, self.camera.apply(tile))

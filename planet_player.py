@@ -43,9 +43,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.selected_tool = self.tools[self.tool_index]
 
     def import_image(self):
-        path = "Images/player_" + self.image_status + "_" + str(int(self.image_frame) + 1) + ".png"
+        path = "Images/Player/" + self.image_status + str(int(self.image_frame) + 1) + ".png"
         now_image = pygame.image.load(path).convert_alpha()
-        now_image = pygame.transform.scale(now_image, (50, 70))
+        now_image = pygame.transform.scale(now_image, (64, 64))
         return now_image
 
     def import_tools_sprites(self):
@@ -66,7 +66,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
     def animate(self, dt):
 
         self.image_frame += 4 * dt
-        if self.image_frame >= 4:  # больше 3, потому что количество спрайтов для анимации равно 3
+        if self.image_frame >= 5:  # больше 6, потому что количество спрайтов для анимации равно 6
             self.image_frame = 0
 
         self.image = self.import_image()
