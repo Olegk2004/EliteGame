@@ -87,8 +87,9 @@ class Game:
                         click_pos = pygame.mouse.get_pos()  # получаем координаты курсора
                         clicked_planet = self.galaxy_map.check_click(click_pos)  # проверяем находится ли курсор на планете
 
-                        if clicked_planet:  # если курсор на планете
-
+                        if clicked_planet or self.galaxy_map.cursor_is_within_jump_rect:  # если курсор на планете
+                            if self.galaxy_map.cursor_is_within_jump_rect:
+                                clicked_planet = self.galaxy_map.jump_rect_planet
                             self.player.bar_save = self.player.fuel
                             jump_done = self.player.jump(clicked_planet)  # совершаем прыжок
                             if not jump_done:
