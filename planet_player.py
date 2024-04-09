@@ -23,7 +23,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.max_stamina = 500
         self.stamina = 500
         self.coll_pos = coll_pos
-        #fkags
+        # fkags
         self.statx = 1
         self.staty = 1
         # mask
@@ -124,18 +124,20 @@ class PlanetPlayer(pygame.sprite.Sprite):
     def move(self, dt, objects):
         for i in range(len(self.coll_pos)):
 
-            current_x = [col_pos[0] for col_pos in self.coll_pos[i]] # все иксы осязаемых объектов
-            current_y = [col_pos[1] for col_pos in self.coll_pos[i]]# все игреки
+            current_x = [col_pos[0] for col_pos in self.coll_pos[i]]  # все иксы осязаемых объектов
+            current_y = [col_pos[1] for col_pos in self.coll_pos[i]]  # все игреки
             for i in range(len(current_x)):
 
-                if abs(current_x[i] + 15 - self.pos.x - self.direction.x * self.speed * dt) <= EPS  : # если близко подошли к икс координате осязаемого объекта
+                if abs(current_x[
+                           i] + 15 - self.pos.x - self.direction.x * self.speed * dt) <= EPS:  # если близко подошли к икс координате осязаемого объекта
                     self.statx = 0
                     break
                 else:
                     self.statx = 1
 
             for i in range(len(current_y)):
-                if abs(current_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS: # если к игрек координате
+                if abs(current_y[
+                           i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS:  # если к игрек координате
                     self.staty = 0
                     break
                 else:
@@ -147,31 +149,23 @@ class PlanetPlayer(pygame.sprite.Sprite):
             self.direction = self.direction.normalize()
 
         # перемещение по горизонтали
-        if 20 + self.rect.x // 2 <= self.pos.x + self.direction.x * self.speed * dt <= SCREEN_WIDTH - 20:
+        self.statx = self.statx + self.staty
+        if self.statx:
+            self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+        else:
+            self.pos.x += 0
 
-
-
-            self.statx = self.statx + self.staty
-            if self.statx:
-                self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
-
-            else:
-                self.pos.x += 0
-
-
-            self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
+        self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
 
         # перемещение по вертикали
-        if 30 <= self.pos.y + self.direction.y * self.speed * dt <= (SCREEN_HEIGHT - 30):
-            self.staty = self.staty + self.statx
-            if self.staty:
-                self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+        self.staty = self.staty + self.statx
+        if self.staty:
+            self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
 
-            else:
-                self.pos.y += 0
+        else:
+            self.pos.y += 0
 
-
-            self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
+        self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
 
     def update(self, dt):
         self.input()

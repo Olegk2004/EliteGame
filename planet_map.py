@@ -49,20 +49,21 @@ class PlanetMap:
         # self.setup()
 
     def setup(self, coll_pos):
+
         self.planet_player = PlanetPlayer((50, 350), self.all_sprites,
                                           coll_pos)  # теперь в аргументах указываем ещё и позиции осязаемых объектов
 
         self.planet_enemies = {}
         self.enemies_overlays = {}
-        for i in range(NUM_OF_ENEMIES): # в сеттингс добавил кол-во врагов, пока закомментил
+        for i in range(NUM_OF_ENEMIES):  # в сеттингс добавил кол-во врагов, пока закомментил
             self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player, self.bullet_group,
-                                                                 self.all_sprites,  coll_pos, (500, 100 + i * 100))
+                                                                 self.all_sprites, coll_pos, (500, 100 + i * 100))
 
         self.overlay = Overlay(self.display_surface, self.planet_player)
 
     def draw(self, dt):
         self.display_surface.fill('black')
-        tmx_data = load_pygame("Tiles/tile2.tmx")  # берём тайл-карту
+        tmx_data = load_pygame("Tiles/map1.tmx")  # берём тайл-карту
 
         for layer in tmx_data.visible_layers:  # по всем видимым уровням тайл-карты
 
@@ -70,7 +71,7 @@ class PlanetMap:
                 for x, y, surf in layer.tiles():  # каждый икс и игрек и поверхность(рисуночек тайла отдельного) текущего уровня
                     pos = (x * TILE_SIZE, y * TILE_SIZE)  # tile выравниваем каждый тайл
 
-                    if layer.name == "second" and self.stat2 != 0:  # если это тайл второго уровня(гле осязаемые объекты) и при этом мы добавляли его позиции ниразу, то
+                    if layer.name == "trees and bushes" and self.stat2 != 0:  # если это тайл второго уровня(гле осязаемые объекты) и при этом мы добавляли его позиции ниразу, то
                         if len(self.coll) == 0:
                             self.coll.append([x * TILE_SIZE, y * 32, TILE_SIZE])  # добавляем позиции осязаемого объекта
                             continue
@@ -78,8 +79,9 @@ class PlanetMap:
                         current_y = [col_pos[1] for col_pos in self.coll]  # все игреки
                         new_x = [abs(xx - x * TILE_SIZE) for xx in current_x]
                         new_y = [abs(yy - y * TILE_SIZE) for yy in current_y]
-                        if min(new_x) <= 32 and min(new_y) == 0 or min(new_y) <= 32 and min(new_x) == 0 :
-                            self.coll.append([x * TILE_SIZE, y * TILE_SIZE, surf])  # добавляем позиции осязаемого объекта
+                        if min(new_x) <= 32 and min(new_y) == 0 or min(new_y) <= 32 and min(new_x) == 0:
+                            self.coll.append(
+                                [x * TILE_SIZE, y * TILE_SIZE, surf])  # добавляем позиции осязаемого объекта
                         else:
                             self.colls.append(self.coll)
                             self.coll = []
@@ -97,6 +99,7 @@ class PlanetMap:
 
         for bullet in self.bullet_group:
             self.display_surface.blit(bullet.image, self.camera.apply(bullet))
+
         self.all_sprites.update(dt)
         self.bullet_group.update(dt)
 
@@ -104,7 +107,7 @@ class PlanetMap:
             self.setup(self.colls)  # передаём позиции осязаемых позиций
             self.stat = 1
             self.stat2 = 0
-        #for overlay in self.enemies_overlays.values():
-            #overlay.display()
+        # for overlay in self.enemies_overlays.values():
+        # overlay.display()
         self.overlay.display()
         self.camera.update(self.planet_player)
