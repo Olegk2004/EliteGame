@@ -32,14 +32,14 @@ class CameraGroup(pygame.sprite.Group):
             if system == self.player.current_planet:  # если это текущая планета игрока, то рисуем одним цветом
                 system.sprite = Planet(CURRENT_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 5, self)
             elif system in self.player.visited_planets:  # если это посещенная планета, то другим
-                system.sprite = Planet(STANDART_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
+                system.sprite = Planet(STANDARD_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
             else:
                 if system.gold_planet != 0:
                     system.sprite = Planet(SUPER_FUEL_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 4, self)
                 elif system.fuel_station_value != 0:
                     system.sprite = Planet(FUEL_STATION_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
                 else:
-                    system.sprite = Planet(STANDART_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
+                    system.sprite = Planet(STANDARD_PLANET_IMAGE.convert_alpha(), (system.x, system.y), 3, self)
 
         # camera offset
         self.half_w = self.display_surface.get_size()[0] // 2
@@ -119,7 +119,7 @@ class CameraGroup(pygame.sprite.Group):
         for match in self.galaxy.matches[self.player.current_planet]:
             if match in self.player.visited_planets:
                 match.sprite.kill()
-                match.sprite = Planet(STANDART_PLANET_IMAGE, (match.x, match.y), 3, self)
+                match.sprite = Planet(STANDARD_PLANET_IMAGE, (match.x, match.y), 3, self)
             pygame.draw.line(self.internal_surf, EDGES_COLOR,
                              self.player.current_planet.sprite.rect.center - self.offset + self.internal_offset,
                              match.sprite.rect.center - self.offset + self.internal_offset, 2)
@@ -137,6 +137,8 @@ class CameraGroup(pygame.sprite.Group):
 
 class Map:
     def __init__(self, galaxy, player):
+        self.jump_rect_planet = None
+        self.cursor_is_within_jump_rect = False
         self.galaxy = galaxy
         self.player = player
         self.all_sprites = pygame.sprite.Group()
@@ -251,29 +253,46 @@ class Map:
         self.border.blit(text13, (5, 375))
 
         # Нижняя правая панель с выбором планеты для прыжка
+        jump_panel_surf = pygame.Surface((298, 298))
+        scroll_surf = pygame.Surface((298, 500))
+        scroll_offset_y = 0
+        txt_rects = []
+        txt_rects_planets = []
+
+        jump_txt = my_font.render('Совершить гиперпрыжок:', False, (255, 255, 255))
+        scroll_surf.blit(jump_txt, (30, 30))
+
+        self.cursor_is_within_jump_rect = False
+        self.jump_rect_planet = None
+        for i in range(len(self.galaxy.matches[self.player.current_planet])):
+            matched_planet = self.galaxy.matches[self.player.current_planet][i]
+            planet_txt = my_font.render(f'#{i + 1} {matched_planet.name} ' +
+                                        f'[{self.player.current_planet.distance_to(matched_planet)}]',
+                                        False, (255, 255, 255))
+            planet_txt_rect = planet_txt.get_rect(topleft=(30, 50 + 20 * i))
+            txt_rects_planets.append(matched_planet)
+            txt_rects.append(planet_txt_rect)
+            scroll_surf.blit(planet_txt, planet_txt_rect)
+
+        for i in range(len(txt_rects_planets)):
+            rect = txt_rects[i]
+            matched_planet = txt_rects_planets[i]
+            cursor = pygame.Vector2(pygame.mouse.get_pos())
+            if (rect.left <= cursor.x - MAP_PANEL_WIDTH <= rect.right) and (rect.top <= cursor.y - 450 <= rect.bottom):
+                self.cursor_is_within_jump_rect = True
+                self.jump_rect_planet = matched_planet
+                planet_yellow_txt = my_font.render(f'#{i + 1} {matched_planet.name} ' +
+                                                   f'[{self.player.current_planet.distance_to(matched_planet)}]',
+                                                   False, (255, 255, 0))
+                scroll_surf.blit(planet_yellow_txt, rect)
+                matched_planet_label = my_font.render(matched_planet.name, False, (255, 255, 255))
+                self.show_planet_label(matched_planet, matched_planet_label)
+
+        jump_panel_surf.blit(scroll_surf, (0, 0))
+        self.border.blit(jump_panel_surf, (0, 450))
 
         if checked_mouse:  # Отображение названия планеты из matches при наведении курсора на нее
-            checked_mouse_name_rect = checked_mouse_name_txt.get_rect()
-            # Высчитываем положение планеты в координатах экрана (а не галактики)
-            checked_planet_x = \
-                self.calculate_planet_pos_on_display_surf(pygame.Vector2(checked_mouse.x, checked_mouse.y))[0]
-            checked_planet_y = \
-                self.calculate_planet_pos_on_display_surf(pygame.Vector2(checked_mouse.x, checked_mouse.y))[1]
-            # Рассчитываем координаты поверхности с названием планеты относительно центра планеты так, чтобы его было
-            # хорошо видно при разных обстоятельствах
-            self.map_screen.blit(
-                checked_mouse_name_txt,
-                (
-                    checked_planet_x - checked_mouse_name_rect.width // 2 if
-                    checked_planet_x - checked_mouse_name_rect.width // 2 > 0 and
-                    checked_planet_x + checked_mouse_name_rect.width // 2 < MAP_PANEL_WIDTH else 5 if
-                    0 > checked_planet_x - checked_mouse_name_rect.width else
-                    MAP_PANEL_WIDTH - checked_mouse_name_rect.width - 5,
-                    checked_planet_y - checked_mouse.sprite.rect.height // 2 - 20 if
-                    checked_planet_y - checked_mouse.sprite.rect.height // 2 - 20 > 0 else
-                    checked_planet_y + checked_mouse.sprite.rect.height // 2 + 5
-                )
-            )
+            self.show_planet_label(checked_mouse, checked_mouse_name_txt)
 
         # Блок надписей в левом нижнем углу карты
         map_ui_font = pygame.font.SysFont('Century Gothic', 20)
@@ -299,9 +318,30 @@ class Map:
 
         # Блитаем карту и боковую панель на экран
         surface.blit(self.map_screen, self.rect)
-        surface.blit(self.border, (SCREEN_HEIGHT, 0))
+        surface.blit(self.border, (MAP_PANEL_WIDTH, 0))
 
-        debug(str(pygame.mouse.get_pos()), surface)
+    def show_planet_label(self, planet, label_txt):
+        checked_mouse_name_rect = label_txt.get_rect()
+        # Высчитываем положение планеты в координатах экрана (а не галактики)
+        checked_planet_x = \
+            self.calculate_planet_pos_on_display_surf(pygame.Vector2(planet.x, planet.y))[0]
+        checked_planet_y = \
+            self.calculate_planet_pos_on_display_surf(pygame.Vector2(planet.x, planet.y))[1]
+        # Рассчитываем координаты поверхности с названием планеты относительно центра планеты так, чтобы его было
+        # хорошо видно при разных обстоятельствах
+        self.map_screen.blit(
+            label_txt,
+            (
+                checked_planet_x - checked_mouse_name_rect.width // 2 if
+                checked_planet_x - checked_mouse_name_rect.width // 2 > 0 and
+                checked_planet_x + checked_mouse_name_rect.width // 2 < MAP_PANEL_WIDTH else 5 if
+                0 > checked_planet_x - checked_mouse_name_rect.width else
+                MAP_PANEL_WIDTH - checked_mouse_name_rect.width - 5,
+                checked_planet_y - planet.sprite.rect.height // 2 - 20 if
+                checked_planet_y - planet.sprite.rect.height // 2 - 20 > 0 else
+                checked_planet_y + planet.sprite.rect.height // 2 + 5
+            )
+        )
 
     def out_of_fuel(self):
         self.timers['out of fuel'].activate()
@@ -313,14 +353,14 @@ class Map:
 
             # Adjust the offset
             adjusted_offset_sprite_cords = (
-                offset_sprite_cords[0] + self.camera_group.scaled_rect.left,
-                offset_sprite_cords[1] + self.camera_group.scaled_rect.top
+                offset_sprite_cords[0] * self.camera_group.zoom_scale + self.camera_group.scaled_rect.left,
+                offset_sprite_cords[1] * self.camera_group.zoom_scale + self.camera_group.scaled_rect.top
             )
 
             # Calculate the zoomed coordinates of the planet sprite within the visible area
             zoomed_sprite_cords = (
-                (adjusted_offset_sprite_cords[0]),  # * self.camera_group.zoom_scale),
-                (adjusted_offset_sprite_cords[1])  # * self.camera_group.zoom_scale)
+                (adjusted_offset_sprite_cords[0]),
+                (adjusted_offset_sprite_cords[1])
             )
 
             # Calculate the distance between the click position and the zoomed sprite coordinates
@@ -341,14 +381,14 @@ class Map:
 
             # Adjust the offset
             adjusted_offset_sprite_cords = (
-                offset_sprite_cords[0] + self.camera_group.scaled_rect.left,
-                offset_sprite_cords[1] + self.camera_group.scaled_rect.top
+                offset_sprite_cords[0] * self.camera_group.zoom_scale + self.camera_group.scaled_rect.left,
+                offset_sprite_cords[1] * self.camera_group.zoom_scale + self.camera_group.scaled_rect.top
             )
 
             # Calculate the zoomed coordinates of the planet sprite within the visible area
             zoomed_sprite_cords = (
-                (adjusted_offset_sprite_cords[0]),  # * self.camera_group.zoom_scale),
-                (adjusted_offset_sprite_cords[1])  # * self.camera_group.zoom_scale)
+                (adjusted_offset_sprite_cords[0]),
+                (adjusted_offset_sprite_cords[1])
             )
 
             # Calculate the distance between the click position and the zoomed sprite coordinates
@@ -365,7 +405,7 @@ class Map:
     def calculate_planet_pos_on_display_surf(self, pos):
         offset_sprite_cords = pos - self.camera_group.offset + self.camera_group.internal_offset
         adjusted_offset_sprite_cords = (
-            offset_sprite_cords[0] + self.camera_group.scaled_rect.left,
-            offset_sprite_cords[1] + self.camera_group.scaled_rect.top
+            offset_sprite_cords[0] * self.camera_group.zoom_scale + self.camera_group.scaled_rect.left,
+            offset_sprite_cords[1] * self.camera_group.zoom_scale + self.camera_group.scaled_rect.top
         )
         return adjusted_offset_sprite_cords
