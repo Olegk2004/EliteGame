@@ -17,7 +17,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
         # movement attributes
         self.direction = pygame.math.Vector2()  # направление, определяется вектором. Во время обновления координаты игрока меняются в зависимости от направления
         self.pos = pygame.math.Vector2(self.rect.center)  # координаты игрока
-        self.speed = 200
+        self.speed = 300
         self.max_hp = 1000
         self.hp = 1000
         self.max_stamina = 500
@@ -65,7 +65,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
 
     def animate(self, dt):
 
-        self.image_frame += 4 * dt
+        self.image_frame += 6 * dt
         if self.image_frame >= 5:  # больше 6, потому что количество спрайтов для анимации равно 6
             self.image_frame = 0
 

@@ -158,7 +158,7 @@ class Game:
                     pygame.mouse.get_pos())  # определяем позицию мышки, чтобы передать ее в функцию draw
                 self.galaxy_map.draw_side_panel(self.screen, self.player.fuel, ration, checked_mouse)
             else:
-                dt = self.clock.tick(300) / 1200
+                dt = self.clock.tick(100) / 1000
                 self.planet_map.draw(dt)
 
             # debug(str(pygame.mouse.get_pos()))  # Прикольно да))
