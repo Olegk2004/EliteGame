@@ -31,7 +31,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         # Таймеры
         self.timers = {
-            'tool use': Timer(350, self.use_tool),
+            'tool use': Timer(30, self.use_tool),
             'tool switch': Timer(200)
         }
 
@@ -66,8 +66,13 @@ class PlanetPlayer(pygame.sprite.Sprite):
     def animate(self, dt):
 
         self.image_frame += 6 * dt
-        if self.image_frame >= 5:  # больше 6, потому что количество спрайтов для анимации равно 6
-            self.image_frame = 0
+        if "attack" in self.image_status:
+            if self.image_frame >= 3:
+                self.image_status = "idle"
+                self.image_frame = 0
+        else:
+            if self.image_frame >= 5:  # больше 6, потому что количество спрайтов для анимации равно 6
+                self.image_frame = 0
 
         self.image = self.import_image()
 
@@ -81,27 +86,40 @@ class PlanetPlayer(pygame.sprite.Sprite):
             # Передвижение на WASD
             if keys[pygame.K_w]:
                 self.direction.y = -1
-                self.image_status = "up"
+                _image_status = "up"
             elif keys[pygame.K_s]:
                 self.direction.y = 1
-                self.image_status = "down"
+                _image_status = "down"
             else:
                 self.direction.y = 0
 
             if keys[pygame.K_a]:
                 self.direction.x = -1
-                self.image_status = "left"
+                _image_status = "left"
             elif keys[pygame.K_d]:
                 self.direction.x = 1
-                self.image_status = "right"
+                _image_status = "right"
             else:
                 self.direction.x = 0
 
+            if self.direction.x == 0 and self.direction.y == 0:  # если остаемся на месте
+                _image_status = "idle"
+
+            if not "attack" in self.image_status:
+                self.image_status = _image_status
+
             # Использование инструмента
-            if keys[pygame.K_f]:
+            if keys[pygame.K_p]:
                 self.timers['tool use'].activate()
                 self.direction = pygame.math.Vector2()
                 self.image_frame = 0
+                if self.selected_tool == "sword":
+                    if not "attack" in self.image_status:
+                        if self.image_status == "idle":
+                            self.image_status = "down"
+                        self.image_status = "attack_"+self.image_status
+                        self.image_frame = 0
+
 
             # Смена инструмента
             if keys[pygame.K_TAB] and not self.timers['tool switch'].active:
@@ -111,8 +129,6 @@ class PlanetPlayer(pygame.sprite.Sprite):
                     self.tool_index = 0
                 self.selected_tool = self.tools[self.tool_index]
 
-        if self.direction.x == 0 and self.direction.y == 0:  # если остаемся на месте
-            self.image_status = "idle"
 
     def update_timers(self):
         for timer in self.timers.values():

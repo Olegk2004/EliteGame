@@ -60,7 +60,6 @@ class Game:
         self.planet_map = PlanetMap(self.player.current_planet)
         # создаем карту космоса
         self.galaxy_map = Map(self.galaxy, self.player)
-
     def run(self):
         # Для полоски
         ration = 0

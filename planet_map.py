@@ -50,7 +50,7 @@ class PlanetMap:
 
     def setup(self, coll_pos):
 
-        self.planet_player = PlanetPlayer((50, 350), self.all_sprites,
+        self.planet_player = PlanetPlayer((250, 380), self.all_sprites,
                                           coll_pos)  # теперь в аргументах указываем ещё и позиции осязаемых объектов
 
         self.planet_enemies = {}
@@ -71,7 +71,7 @@ class PlanetMap:
                 for x, y, surf in layer.tiles():  # каждый икс и игрек и поверхность(рисуночек тайла отдельного) текущего уровня
                     pos = (x * TILE_SIZE, y * TILE_SIZE)  # tile выравниваем каждый тайл
 
-                    if layer.name == "trees and bushes" and self.stat2 != 0:  # если это тайл второго уровня(гле осязаемые объекты) и при этом мы добавляли его позиции ниразу, то
+                    if layer.name == "second" and self.stat2 != 0:  # если это тайл второго уровня(гле осязаемые объекты) и при этом мы добавляли его позиции ниразу, то
                         if len(self.coll) == 0:
                             self.coll.append([x * TILE_SIZE, y * 32, TILE_SIZE])  # добавляем позиции осязаемого объекта
                             continue
@@ -94,7 +94,7 @@ class PlanetMap:
             self.colls.append(self.coll)
             self.switch = 1
 
-        for sprite in sorted(self.all_sprites, key=lambda sprite: sprite.rect.centery):
+        for sprite in self.all_sprites:
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
 
         for bullet in self.bullet_group:

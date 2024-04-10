@@ -19,3 +19,8 @@ MAX_FUEL_VALUE = int(FUEL_CONST * 1.48)
 NUM_OF_ENEMIES = 1
 FPS = 220
 TILE_SIZE = 32
+LAYERS = {
+    'main': 0,
+    'trees': 1,
+    'water':2
+}
