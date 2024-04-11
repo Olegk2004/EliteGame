@@ -33,14 +33,6 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.image_status = "idle"
         self.image_frame = 1
 
-        colors = {0: 'red', 1: 'orange', 2: 'yellow', 3: 'green', 4: 'blue',
-                  5: 'purple'}  # Пока нет норм спрайтов, сделал различимые градиенты
-        start_color_id = random.choice(range(len(colors)))
-        self.start_color = pygame.Color(colors[start_color_id])
-        self.end_color = pygame.Color(colors[(start_color_id + 1) % len(colors)])
-        self.gradient_tick = 0
-        self.gradient_speed = 0.01
-
         self.direction = pygame.math.Vector2()
 
         self.obstacle_sprites = coll_pos
@@ -53,22 +45,22 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.attack_radius = 300
         self.notice_radius = 500
 
+        # player interaction
+        self.can_attack = True
+
 
     def import_image(self):
-        now_image = pygame.Surface((40, 60))
-        color = pygame.Color(int(self.start_color.r + (self.end_color.r - self.start_color.r) * self.gradient_tick),
-                            int(self.start_color.g + (self.end_color.g - self.start_color.g) * self.gradient_tick),
-                            int(self.start_color.b + (self.end_color.b - self.start_color.b) * self.gradient_tick))
-        if self.direction != (0, 0):
-            self.gradient_tick += self.gradient_speed
-        if self.gradient_tick > 1:
-            self.gradient_tick = 0
-        now_image.fill(color)
+        path = "Images/Enemies/sceleton/" + self.image_status + str(int(self.image_frame) + 1) + ".png"
+        now_image = pygame.image.load(path).convert_alpha()
+        now_image = pygame.transform.scale(now_image, (64, 64))
         return now_image
 
     def animate(self, dt):
         self.image_frame += 4 * dt
-        if self.image_frame >= 4:  # больше 3, потому что количество спрайтов для анимации равно 3
+        print(self.image_frame)
+        if self.image_frame >= 5:  # больше 3, потому что количество спрайтов для анимации равно 3
+            if self.status == "attack":
+                self.can_attack = False
             self.image_frame = 0
         self.image = self.import_image()
 
@@ -86,6 +78,27 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
         self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
         self.collision('vertical')
+
+        if self.direction.y < 0:
+            _image_status = "up"
+        if self.direction.y > 0:
+            _image_status = "down"
+        else:
+            self.direction.y = 0
+
+        if self.direction.x < 0:
+            _image_status = "left"
+        elif self.direction.x > 0:
+            self.direction.x = 1
+            _image_status = "right"
+        else:
+            self.direction.x = 0
+
+        if self.direction.x == 0 and self.direction.y == 0:  # если остаемся на месте
+            _image_status = "idle"
+
+        if not "attack" in self.image_status:
+            self.image_status = _image_status
 
     def collision(self, direction):
         if direction == 'horizontal':
@@ -127,7 +140,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
     def get_status(self, player):
         distance = self.get_player_distance_direction(player)[0]
 
-        if distance <= self.attack_radius:
+        if distance <= self.attack_radius and self.can_attack:
             self.status = "attack"
         elif distance <= self.notice_radius:
             self.status = "move"
@@ -137,7 +150,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
     def actions(self, player):
         if self.status == "attack":
             self.direction = self.get_player_distance_direction(self.target)[1]
-        elif self.status == "move":
+        if self.status == "move":
             self.direction = self.get_player_distance_direction(self.target)[1]
         else:
             self.direction = pygame.math.Vector2()
@@ -147,4 +160,4 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.actions(self.target)
         print(self.direction)
         self.move(dt)
-        #self.animate(dt)
+        self.animate(dt)
