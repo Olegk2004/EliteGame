@@ -23,15 +23,12 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.max_stamina = 500
         self.stamina = 500
         self.coll_pos = coll_pos
-        # fkags
-        self.statx = 1
-        self.staty = 1
-        # mask
-        self.objects = coll_pos
-        self.mask = pygame.mask.from_surface(self.image)
+
+        self.obstacle_sprites = coll_pos
+
         # Таймеры
         self.timers = {
-            'tool use': Timer(30, self.use_tool),
+            'tool use': Timer(3, self.use_tool),
             'tool switch': Timer(200)
         }
 
@@ -117,9 +114,8 @@ class PlanetPlayer(pygame.sprite.Sprite):
                     if not "attack" in self.image_status:
                         if self.image_status == "idle":
                             self.image_status = "down"
-                        self.image_status = "attack_"+self.image_status
+                        self.image_status = "attack_" + self.image_status
                         self.image_frame = 0
-
 
             # Смена инструмента
             if keys[pygame.K_TAB] and not self.timers['tool switch'].active:
@@ -129,7 +125,6 @@ class PlanetPlayer(pygame.sprite.Sprite):
                     self.tool_index = 0
                 self.selected_tool = self.tools[self.tool_index]
 
-
     def update_timers(self):
         for timer in self.timers.values():
             timer.update()
@@ -137,55 +132,49 @@ class PlanetPlayer(pygame.sprite.Sprite):
     def use_tool(self):
         pass
 
-    def move(self, dt, objects):
-        for i in range(len(self.coll_pos)):
-
-            current_x = [col_pos[0] for col_pos in self.coll_pos[i]]  # все иксы осязаемых объектов
-            current_y = [col_pos[1] for col_pos in self.coll_pos[i]]  # все игреки
-            for i in range(len(current_x)):
-
-                if abs(current_x[
-                           i] + 15 - self.pos.x - self.direction.x * self.speed * dt) <= EPS:  # если близко подошли к икс координате осязаемого объекта
-                    self.statx = 0
-                    break
-                else:
-                    self.statx = 1
-
-            for i in range(len(current_y)):
-                if abs(current_y[
-                           i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS:  # если к игрек координате
-                    self.staty = 0
-                    break
-                else:
-                    self.staty = 1
-            if self.staty + self.statx == 0:
-                break
+    def move(self, dt):
         # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
         if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
             self.direction = self.direction.normalize()
 
         # перемещение по горизонтали
-        self.statx = self.statx + self.staty
-        if self.statx:
-            self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
-        else:
-            self.pos.x += 0
-
+        self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
         self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
+        self.collision('horizontal')
 
         # перемещение по вертикали
-        self.staty = self.staty + self.statx
-        if self.staty:
-            self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
-
-        else:
-            self.pos.y += 0
-
+        self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
         self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
+        self.collision('vertical')
+
+    def collision(self, direction):
+        if direction == 'horizontal':
+            for sprite in self.obstacle_sprites:
+                self.hitbox = self.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                sprite_hitbox = sprite.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                if sprite_hitbox.colliderect(self.hitbox):
+                    if self.direction.x > 0:
+                        self.hitbox.right = sprite_hitbox.left
+                    if self.direction.x < 0:
+                        self.hitbox.left = sprite_hitbox.right
+                    self.rect.centerx = self.hitbox.centerx
+                    self.pos.x = self.hitbox.centerx
+
+        if direction == 'vertical':
+            for sprite in self.obstacle_sprites:
+                self.hitbox = self.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                sprite_hitbox = sprite.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                if sprite_hitbox.colliderect(self.hitbox):
+                    if self.direction.y > 0:
+                        self.hitbox.bottom = sprite_hitbox.top
+                    if self.direction.y < 0:
+                        self.hitbox.top = sprite_hitbox.bottom
+                    self.rect.centery = self.hitbox.centery
+                    self.pos.y = self.hitbox.centery
 
     def update(self, dt):
         self.input()
         self.update_timers()
 
-        self.move(dt, self.objects)
+        self.move(dt)
         self.animate(dt)

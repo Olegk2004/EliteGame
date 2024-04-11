@@ -13,7 +13,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=pos)
         self.pos = pygame.math.Vector2(pos)
         self.direction = pygame.math.Vector2(direction).normalize()
-        self.speed = 350
+        self.speed = 100
 
     def update(self, dt):
         self.pos += self.direction * self.speed * dt
@@ -23,7 +23,8 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class PlanetEnemy(pygame.sprite.Sprite):
-    def __init__(self, target, bullet_group, group,coll_pos, pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
+    def __init__(self, target, bullet_group, group, coll_pos,
+                 pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
         super().__init__(group)
         self.bullet_group = bullet_group
 
@@ -32,7 +33,8 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.image_status = "idle"
         self.image_frame = 1
 
-        colors = {0: 'red', 1: 'orange', 2: 'yellow', 3: 'green', 4: 'blue', 5: 'purple'}  # Пока нет норм спрайтов, сделал различимые градиенты
+        colors = {0: 'red', 1: 'orange', 2: 'yellow', 3: 'green', 4: 'blue',
+                  5: 'purple'}  # Пока нет норм спрайтов, сделал различимые градиенты
         start_color_id = random.choice(range(len(colors)))
         self.start_color = pygame.Color(colors[start_color_id])
         self.end_color = pygame.Color(colors[(start_color_id + 1) % len(colors)])
@@ -41,65 +43,28 @@ class PlanetEnemy(pygame.sprite.Sprite):
 
         self.direction = pygame.math.Vector2()
 
-        # Таймеры
-        self.timers = {
-            'shot': Timer(500),
-            'fire delay': Timer(50),
-            'reload': Timer(1000)
-        }
-        self.coll_pos = coll_pos
+        self.obstacle_sprites = coll_pos
         self.image = self.import_image()
         self.rect = self.image.get_rect(center=pos)
 
         self.pos = pygame.math.Vector2(self.rect.center)
-        self.speed = random.randint(100, 200)
+        self.speed = 200
 
-        # Расстояние до цели
-        self.dx = self.target.pos[0] - self.pos[0]
-        self.dy = self.target.pos[1] - self.pos[1]
-        self.dist = math.hypot(self.dx, self.dy)
+        self.attack_radius = 300
+        self.notice_radius = 500
 
-        # Оружие
-        self.tools = ['sword', 'gun']
-        self.tool_index = random.randint(0, len(self.tools) - 1)
-        self.selected_tool = self.tools[self.tool_index]
 
     def import_image(self):
         now_image = pygame.Surface((40, 60))
-        if self.timers['shot'].active:
-            color = pygame.Color('white')
-        else:
-            color = pygame.Color(int(self.start_color.r + (self.end_color.r - self.start_color.r) * self.gradient_tick),
-                                 int(self.start_color.g + (self.end_color.g - self.start_color.g) * self.gradient_tick),
-                                 int(self.start_color.b + (self.end_color.b - self.start_color.b) * self.gradient_tick))
-            if self.direction != (0, 0):
-                self.gradient_tick += self.gradient_speed
-            if self.gradient_tick > 1:
-                self.gradient_tick = 0
+        color = pygame.Color(int(self.start_color.r + (self.end_color.r - self.start_color.r) * self.gradient_tick),
+                            int(self.start_color.g + (self.end_color.g - self.start_color.g) * self.gradient_tick),
+                            int(self.start_color.b + (self.end_color.b - self.start_color.b) * self.gradient_tick))
+        if self.direction != (0, 0):
+            self.gradient_tick += self.gradient_speed
+        if self.gradient_tick > 1:
+            self.gradient_tick = 0
         now_image.fill(color)
         return now_image
-
-    def update_timers(self):
-        for timer in self.timers.values():
-            timer.update()
-
-    def try_shoot(self):
-        if not self.timers['shot'].active:
-            if self.selected_tool == 'gun' and self.dist < 500:
-                shot_prob = 0.1
-                if random.random() < shot_prob:
-                    self.shoot()
-
-    def shoot(self):
-        if not self.timers['reload'].active:
-            self.timers['shot'].activate()
-            shot_series = [1, 3, 5]
-            number_of_shots = random.choices(shot_series, [0.8, 0.15, 0.05])[0]
-            for _ in range(number_of_shots):
-                bullet = Bullet(self.pos, (self.dx, self.dy), self.bullet_group)
-                self.timers['fire delay'].activate()
-            self.timers['reload'].activate()
-
 
     def animate(self, dt):
         self.image_frame += 4 * dt
@@ -107,61 +72,79 @@ class PlanetEnemy(pygame.sprite.Sprite):
             self.image_frame = 0
         self.image = self.import_image()
 
-    def move(self, dt, objects):
-        for i in range(len(self.coll_pos)):
-            current_x = [col_pos[0] for col_pos in self.coll_pos[i]]  # все иксы осязаемых объектов
-            current_y = [col_pos[1] for col_pos in self.coll_pos[i]]  # все игреки
-            for i in range(len(current_x)):
-                if abs(current_x[i] + 15 - self.pos.x - self.direction.x * self.speed * dt) <= EPS:
-                    self.statx = 0
-                    break
-                else:
-                    self.statx = 1
-
-            for i in range(len(current_y)):
-                if abs(current_y[i] - self.pos.y - self.direction.y * self.speed * dt) <= EPS:
-                    self.staty = 0
-                    break
-                else:
-                    self.staty = 1
-
-            if self.staty + self.statx == 0:
-                break
-
-        if self.direction.magnitude() > 0:
+    def move(self, dt):
+        # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
+        if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
             self.direction = self.direction.normalize()
 
-        if 20 + self.rect.x // 2 <= self.pos.x + self.direction.x * self.speed * dt <= SCREEN_WIDTH - 20:
-            self.statx = self.statx + self.staty
-            if self.statx:
-                self.pos.x += self.direction.x * self.speed * dt
-            else:
-                self.pos.x += 0
+        # перемещение по горизонтали
+        self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+        self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
+        self.collision('horizontal')
 
-            self.rect.centerx = self.pos.x
+        # перемещение по вертикали
+        self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+        self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
+        self.collision('vertical')
 
-        if 30 <= self.pos.y + self.direction.y * self.speed * dt <= (SCREEN_HEIGHT - 30):
-            self.staty = self.staty + self.statx
-            if self.staty:
-                self.pos.y += self.direction.y * self.speed * dt
-            else:
-                self.pos.y += 0
+    def collision(self, direction):
+        if direction == 'horizontal':
+            for sprite in self.obstacle_sprites:
+                self.hitbox = self.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                sprite_hitbox = sprite.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                if sprite_hitbox.colliderect(self.hitbox):
+                    if self.direction.x > 0:
+                        self.hitbox.right = sprite_hitbox.left
+                    if self.direction.x < 0:
+                        self.hitbox.left = sprite_hitbox.right
+                    self.rect.centerx = self.hitbox.centerx
+                    self.pos.x = self.hitbox.centerx
 
-            self.rect.centery = self.pos.y
+        if direction == 'vertical':
+            for sprite in self.obstacle_sprites:
+                self.hitbox = self.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                sprite_hitbox = sprite.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                if sprite_hitbox.colliderect(self.hitbox):
+                    if self.direction.y > 0:
+                        self.hitbox.bottom = sprite_hitbox.top
+                    if self.direction.y < 0:
+                        self.hitbox.top = sprite_hitbox.bottom
+                    self.rect.centery = self.hitbox.centery
+                    self.pos.y = self.hitbox.centery
 
-        self.dx = self.target.pos[0] - self.pos[0]
-        self.dy = self.target.pos[1] - self.pos[1]
-        self.dist = math.hypot(self.dx, self.dy)
+    def get_player_distance_direction(self, player):
+        enemy_vec = pygame.math.Vector2(self.rect.center)
+        player_vec = pygame.math.Vector2(player.rect.center)
+        distance = (player_vec - enemy_vec).magnitude()
 
-        if 30 < self.dist < 300:
-            self.direction.x = int(math.copysign(1, self.dx))
-            self.direction.y = int(math.copysign(1, self.dy))
+        if distance > 0:
+            direction = (player_vec - enemy_vec).normalize()
         else:
-            self.direction = pygame.Vector2()
+            direction = pygame.math.Vector2()
+
+        return (distance, direction)
+
+    def get_status(self, player):
+        distance = self.get_player_distance_direction(player)[0]
+
+        if distance <= self.attack_radius:
+            self.status = "attack"
+        elif distance <= self.notice_radius:
+            self.status = "move"
+        else:
+            self.status = "idle"
+
+    def actions(self, player):
+        if self.status == "attack":
+            self.direction = self.get_player_distance_direction(self.target)[1]
+        elif self.status == "move":
+            self.direction = self.get_player_distance_direction(self.target)[1]
+        else:
+            self.direction = pygame.math.Vector2()
 
     def update(self, dt):
-        self.update_timers()
-        if self.selected_tool == 'gun':
-            self.try_shoot()
-        self.move(dt, self.coll_pos)
-        self.animate(dt)
+        self.get_status(self.target)
+        self.actions(self.target)
+        print(self.direction)
+        self.move(dt)
+        #self.animate(dt)

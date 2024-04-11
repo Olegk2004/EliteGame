@@ -24,3 +24,7 @@ LAYERS = {
     'trees': 1,
     'water':2
 }
+ENEMIES = {
+    'sceleton': [1],
+    'slime': []
+}
