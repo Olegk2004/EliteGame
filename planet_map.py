@@ -42,6 +42,7 @@ class PlanetMap:
         self.obstacle_sprites = pygame.sprite.Group()
         self.tiles_sprites = pygame.sprite.Group()
         self.display_surface = pygame.display.get_surface()
+        self.monsters_sprites = pygame.sprite.Group()
 
         self.stat = 0  # флаг на одноразовый вызов метоа сэтап (там мы передаём позиции в планет_мап)
         self.stat2 = 1  # флаг на одноразовое заполнение массива позиций
@@ -49,6 +50,7 @@ class PlanetMap:
         self.setup()
 
         self.camera = Camera(self.display_surface.get_width(), self.display_surface.get_height())
+
 
     def setup(self):
         tmx_data = load_pygame("Tiles/map1.tmx")
@@ -66,11 +68,19 @@ class PlanetMap:
 
         self.planet_enemies = {}
         self.enemies_overlays = {}
-        for i in range(NUM_OF_ENEMIES):  # в сеттингс добавил кол-во врагов, пока закомментил
+        for i in range(5):  # в сеттингс добавил кол-во врагов, пока закомментил
             self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player, self.bullet_group,
-                                                                 self.all_sprites,
+                                                                 self.monsters_sprites,
                                                                  self.obstacle_sprites, (500, 100 + i * 100))
         self.overlay = Overlay(self.display_surface, self.planet_player)
+
+
+    def player_attack_logic(self):
+        if "attack" in self.planet_player.image_status:
+            collision_sprites = pygame.sprite.spritecollide(self.planet_player, self.monsters_sprites, True)
+            if collision_sprites:
+                for target in collision_sprites:
+                    target.kill()
 
     def draw(self, dt):
         self.display_surface.fill('black')
@@ -82,13 +92,15 @@ class PlanetMap:
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
         for sprite in self.all_sprites:
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
-        #for bullet in self.bullet_group:
-            #self.display_surface.blit(bullet.image, self.camera.apply(bullet))
+        for sprite in self.monsters_sprites:
+            self.display_surface.blit(sprite.image, self.camera.apply(sprite))
 
         self.tiles_sprites.update(dt)
         self.obstacle_sprites.update(dt)
         self.all_sprites.update(dt)
-        #self.bullet_group.update(dt)
+        self.monsters_sprites.update(dt)
+
+        self.player_attack_logic()
 
         # for overlay in self.enemies_overlays.values():
         # overlay.display()

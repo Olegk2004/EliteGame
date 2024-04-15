@@ -5,37 +5,22 @@ from settings import *
 from timer import Timer
 
 
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self, pos, direction, group):
-        super().__init__(group)
-        self.image = pygame.Surface((5, 5))
-        self.image.fill((255, 255, 255))
-        self.rect = self.image.get_rect(center=pos)
-        self.pos = pygame.math.Vector2(pos)
-        self.direction = pygame.math.Vector2(direction).normalize()
-        self.speed = 100
-
-    def update(self, dt):
-        self.pos += self.direction * self.speed * dt
-        self.rect.center = self.pos
-        if not pygame.display.get_surface().get_rect().colliderect(self.rect):
-            self.kill()  # Убиваем пулю, если она выходит за пределы экрана
-
-
 class PlanetEnemy(pygame.sprite.Sprite):
-    def __init__(self, target, bullet_group, group, coll_pos,
+    def __init__(self, target, bullet_group, group, obstacle_sprites,
                  pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
         super().__init__(group)
         self.bullet_group = bullet_group
 
         self.target = target
 
+        self.hp = 1000
+
         self.image_status = "idle"
         self.image_frame = 1
 
         self.direction = pygame.math.Vector2()
 
-        self.obstacle_sprites = coll_pos
+        self.obstacle_sprites = obstacle_sprites
         self.image = self.import_image()
         self.rect = self.image.get_rect(center=pos)
 
@@ -47,7 +32,6 @@ class PlanetEnemy(pygame.sprite.Sprite):
 
         # player interaction
         self.can_attack = True
-
 
     def import_image(self):
         path = "Images/Enemies/sceleton/" + self.image_status + str(int(self.image_frame) + 1) + ".png"

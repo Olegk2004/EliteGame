@@ -4,7 +4,7 @@ from timer import Timer
 
 
 class PlanetPlayer(pygame.sprite.Sprite):
-    def __init__(self, pos, group, coll_pos):
+    def __init__(self, pos, group, obstacle_sprites):
         super().__init__(group)
 
         self.image_status = "idle"  # для определения какого направления спрайт вставлять
@@ -22,9 +22,8 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.hp = 1000
         self.max_stamina = 500
         self.stamina = 500
-        self.coll_pos = coll_pos
 
-        self.obstacle_sprites = coll_pos
+        self.obstacle_sprites = obstacle_sprites
 
         # Таймеры
         self.timers = {
