@@ -51,7 +51,6 @@ class PlanetMap:
 
         self.camera = Camera(self.display_surface.get_width(), self.display_surface.get_height())
 
-
     def setup(self):
         tmx_data = load_pygame("Tiles/map1.tmx")
         for layer in tmx_data.visible_layers:
@@ -68,19 +67,29 @@ class PlanetMap:
 
         self.planet_enemies = {}
         self.enemies_overlays = {}
-        for i in range(5):  # в сеттингс добавил кол-во врагов, пока закомментил
-            self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player, self.bullet_group,
+        for i in range(1):  # в сеттингс добавил кол-во врагов, пока закомментил
+            self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player,
                                                                  self.monsters_sprites,
-                                                                 self.obstacle_sprites, (500, 100 + i * 100))
+                                                                 self.obstacle_sprites,
+                                                                 self.damage_player,
+                                                                 (500, 100 + i * 100)
+                                                                )
         self.overlay = Overlay(self.display_surface, self.planet_player)
-
 
     def player_attack_logic(self):
         if "attack" in self.planet_player.image_status:
-            collision_sprites = pygame.sprite.spritecollide(self.planet_player, self.monsters_sprites, True)
+            collision_sprites = pygame.sprite.spritecollide(self.planet_player, self.monsters_sprites, False)
             if collision_sprites:
                 for target in collision_sprites:
-                    target.kill()
+                    target.get_damage(self.planet_player)
+
+    def damage_player(self, amount):
+        print(self.planet_player.vulnerable)
+        if self.planet_player.vulnerable:
+            self.planet_player.hp -= amount
+            self.planet_player.vulnerable = False
+            self.planet_player.timers["hit"].activate()
+            # spawn particles
 
     def draw(self, dt):
         self.display_surface.fill('black')

@@ -1,6 +1,7 @@
 import pygame
 from settings import *
 from timer import Timer
+from math import sin
 
 
 class PlanetPlayer(pygame.sprite.Sprite):
@@ -28,7 +29,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
         # Таймеры
         self.timers = {
             'tool use': Timer(3, self.use_tool),
-            'tool switch': Timer(200)
+            'tool switch': Timer(200),
+            'hit': Timer(500, self.set_fulnerable)
+
         }
 
         # Инструменты
@@ -37,6 +40,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.import_tools_sprites()
         self.tool_index = 0
         self.selected_tool = self.tools[self.tool_index]
+
+        # damage timer
+        self.vulnerable = True
 
     def import_image(self):
         path = "Images/Player/" + self.image_status + str(int(self.image_frame) + 1) + ".png"
@@ -60,17 +66,31 @@ class PlanetPlayer(pygame.sprite.Sprite):
             self.tools_sprites[tool] = tool_sprite
 
     def animate(self, dt):
-
-        self.image_frame += 6 * dt
         if "attack" in self.image_status:
+            self.image_frame += 12 * dt
             if self.image_frame >= 3:
                 self.image_status = "idle"
                 self.image_frame = 0
         else:
+            self.image_frame += 6 * dt
             if self.image_frame >= 5:  # больше 6, потому что количество спрайтов для анимации равно 6
                 self.image_frame = 0
 
         self.image = self.import_image()
+
+        # flicker
+        if not self.vulnerable:
+            alpha = self.wave_value()
+            self.image.set_alpha(alpha)
+        else:
+            self.image.set_alpha(255)
+
+    def wave_value(self):
+        value = sin(pygame.time.get_ticks())
+        if value >= 0:
+            return 255
+        else:
+            return 0
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -124,9 +144,19 @@ class PlanetPlayer(pygame.sprite.Sprite):
                     self.tool_index = 0
                 self.selected_tool = self.tools[self.tool_index]
 
+    def set_fulnerable(self):
+        self.vulnerable = True
+        return 0
+
     def update_timers(self):
-        for timer in self.timers.values():
-            timer.update()
+        for name, timer in self.timers.items():
+            if name == "hit":
+                if not self.vulnerable:
+                    timer.update()
+            else:
+                timer.update()
+
+
 
     def use_tool(self):
         pass

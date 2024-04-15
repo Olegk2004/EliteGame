@@ -1,4 +1,4 @@
-import math
+from math import sin
 import random
 import pygame
 from settings import *
@@ -6,14 +6,12 @@ from timer import Timer
 
 
 class PlanetEnemy(pygame.sprite.Sprite):
-    def __init__(self, target, bullet_group, group, obstacle_sprites,
-                 pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
+    def __init__(self, target, group, obstacle_sprites, damage_player, pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
         super().__init__(group)
-        self.bullet_group = bullet_group
 
         self.target = target
 
-        self.hp = 1000
+        self.hp = 300
 
         self.image_status = "idle"
         self.image_frame = 1
@@ -25,13 +23,21 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=pos)
 
         self.pos = pygame.math.Vector2(self.rect.center)
-        self.speed = 200
+        self.speed = 100
 
-        self.attack_radius = 300
+        self.attack_radius = 20
         self.notice_radius = 500
 
         # player interaction
         self.can_attack = True
+        self.attack_time = None
+        self.attack_cooldown = 400
+        self.damage_player = damage_player
+
+        # invincibility timer
+        self.vulnerable = True
+        self.hit_time = None
+        self.invinsibility_duration = 300
 
     def import_image(self):
         path = "Images/Enemies/sceleton/" + self.image_status + str(int(self.image_frame) + 1) + ".png"
@@ -39,14 +45,52 @@ class PlanetEnemy(pygame.sprite.Sprite):
         now_image = pygame.transform.scale(now_image, (64, 64))
         return now_image
 
+    def cooldowns(self):
+        current_time = pygame.time.get_ticks()
+        if not self.vulnerable:
+            if current_time - self.hit_time >= self.invinsibility_duration:
+                self.vulnerable = True
+
+    def get_damage(self, player):
+        if self.vulnerable:
+            self.direction = self.get_player_distance_direction(player)[1]
+            self.hp -= 100
+            self.hit_time = pygame.time.get_ticks()
+            self.vulnerable = False
+
+    def check_death(self):
+        if self.hp <= 0:
+            self.kill()
+
+    def hit_reaction(self):
+        if not self.vulnerable:
+            self.direction *= -3
+
     def animate(self, dt):
         self.image_frame += 4 * dt
-        print(self.image_frame)
         if self.image_frame >= 5:  # больше 3, потому что количество спрайтов для анимации равно 3
-            if self.status == "attack":
+            if self.status == "atack":
                 self.can_attack = False
             self.image_frame = 0
+
+        if not self.vulnerable:  # если враг атакован
+            opposite = {"up": "down", "down": "up", "left": "right", "right": "left"}
+            self.image_status = opposite[self.image_status]
+
         self.image = self.import_image()
+        if not self.vulnerable:
+            alpha = self.wave_value()
+            self.image.set_alpha(alpha)
+        else:
+            self.image.set_alpha(255)
+
+    def wave_value(self):
+        value = sin(pygame.time.get_ticks())
+        if value >= 0:
+            return 255
+        else:
+            return 0
+
 
     def move(self, dt):
         # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
@@ -124,7 +168,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
     def get_status(self, player):
         distance = self.get_player_distance_direction(player)[0]
 
-        if distance <= self.attack_radius and self.can_attack:
+        if distance <= self.attack_radius:
             self.status = "attack"
         elif distance <= self.notice_radius:
             self.status = "move"
@@ -133,7 +177,9 @@ class PlanetEnemy(pygame.sprite.Sprite):
 
     def actions(self, player):
         if self.status == "attack":
-            self.direction = self.get_player_distance_direction(self.target)[1]
+            self.attack_time = pygame.time.get_ticks()
+            self.damage_player(100)
+            #self.direction = self.get_player_distance_direction(self.target)[1]
         if self.status == "move":
             self.direction = self.get_player_distance_direction(self.target)[1]
         else:
@@ -142,6 +188,8 @@ class PlanetEnemy(pygame.sprite.Sprite):
     def update(self, dt):
         self.get_status(self.target)
         self.actions(self.target)
-        print(self.direction)
+        self.hit_reaction()
         self.move(dt)
         self.animate(dt)
+        self.cooldowns()
+        self.check_death()
