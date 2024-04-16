@@ -6,8 +6,7 @@ from timer import Timer
 
 
 class PlanetEnemy(pygame.sprite.Sprite):
-    def __init__(self, target, group, obstacle_sprites, damage_player,
-                 pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
+    def __init__(self, target, group, obstacle_sprites, damage_player, pos=(random.randint(64, 500), 65)):
         super().__init__(group)
 
         self.target = target
@@ -27,7 +26,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.speed = 100
 
         self.attack_radius = 20
-        self.notice_radius = 500
+        self.notice_radius = 300
 
         # player interaction
         self.can_attack = True
@@ -39,7 +38,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
         # invincibility timer
         self.vulnerable = True
         self.hit_time = None
-        self.invinsibility_duration = 300
+        self.invincibility_duration = 300
 
     def import_image(self):
         path = "Images/Enemies/sceleton/" + self.image_status + str(int(self.image_frame) + 1) + ".png"
@@ -50,7 +49,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
     def cooldowns(self):
         current_time = pygame.time.get_ticks()
         if not self.vulnerable:
-            if current_time - self.hit_time >= self.invinsibility_duration:
+            if current_time - self.hit_time >= self.invincibility_duration:
                 self.vulnerable = True
 
     def get_damage(self, player):
@@ -193,7 +192,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
         if self.status == "attack":
             self.attack_time = pygame.time.get_ticks()
             self.damage_player(100)
-            # self.direction = self.get_player_distance_direction(self.target)[1]
+            #self.direction = self.get_player_distance_direction(self.target)[1]
         if self.status == "move":
             self.direction = self.get_player_distance_direction(self.target)[1]
         else:

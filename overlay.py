@@ -31,3 +31,14 @@ class Overlay:
         stamina_bar_rect = stamina_bar.get_rect(topleft=(70, 40))
         self.display_surface.blit(stamina_bar_bgd, stamina_bar_bgd_rect)
         self.display_surface.blit(stamina_bar, stamina_bar_rect)
+
+        if self.planet_player.hp <= 0:
+            self.planet_player.timers['you died'].activate()
+            you_died_font = pygame.font.SysFont('Century Gothic', 75, True)
+            you_died_txt = you_died_font.render("YOU DIED", False, (255, 0, 0))
+            you_died_rect = you_died_txt.get_rect()
+            if self.planet_player.timers['you died'].active:
+                you_died_txt.set_alpha(min(200, self.planet_player.timers['you died'].time_left() * 0.5))
+                self.display_surface.blit(you_died_txt,
+                                 (SCREEN_WIDTH // 2 - you_died_rect.width // 2,
+                                  SCREEN_HEIGHT // 2 - 100))

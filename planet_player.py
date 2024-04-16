@@ -32,7 +32,8 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.timers = {
             'attack': Timer(300, self.set_can_attack),
             'tool switch': Timer(200),
-            'hit': Timer(500, self.set_fulnerable)
+            'hit': Timer(500, self.set_vulnerable),
+            'you died': Timer(1000)
         }
 
         # Инструменты
@@ -148,7 +149,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
                     self.tool_index = 0
                 self.selected_tool = self.tools[self.tool_index]
 
-    def set_fulnerable(self):
+    def set_vulnerable(self):
         self.vulnerable = True
         return 0
 

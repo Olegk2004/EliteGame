@@ -8,6 +8,7 @@ from planet_player import PlanetPlayer
 from planet_enemy import PlanetEnemy
 from overlay import Overlay
 from pytmx.util_pygame import load_pygame
+from timer import Timer
 
 
 class Tile(pygame.sprite.Sprite):
@@ -67,12 +68,12 @@ class PlanetMap:
 
         self.planet_enemies = {}
         self.enemies_overlays = {}
-        for i in range(1):  # в сеттингс добавил кол-во врагов, пока закомментил
+        for i in range(NUM_OF_ENEMIES):  # в сеттингс добавил кол-во врагов, пока закомментил
             self.planet_enemies['enemy_' + str(i)] = PlanetEnemy(self.planet_player,
                                                                  self.monsters_sprites,
                                                                  self.obstacle_sprites,
                                                                  self.damage_player,
-                                                                 (500, 100 + i * 100)
+                                                                 (100 + i * 100, 65)
                                                                 )
         self.overlay = Overlay(self.display_surface, self.planet_player)
 
@@ -98,9 +99,16 @@ class PlanetMap:
             if collision_sprites:
                 for target in collision_sprites:
                     target.get_damage(self.planet_player)
+
     def damage_player(self, amount):
         if self.planet_player.vulnerable:
-            self.planet_player.hp -= amount
+            if self.planet_player.hp:
+                self.planet_player.hp -= amount
+                pygame.mixer.Sound('Music/sounds/bruh.mp3').play()
+            else:
+                pygame.mixer.music.load('Music/sounds/you_died.mp3')
+                pygame.mixer.music.play(1)
+                self.planet_player.kill()
             self.planet_player.vulnerable = False
             self.planet_player.timers["hit"].activate()
             # spawn particles
@@ -133,3 +141,4 @@ class PlanetMap:
         # overlay.display()
         self.overlay.display()
         self.camera.update(self.planet_player)
+
