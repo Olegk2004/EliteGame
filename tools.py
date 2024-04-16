@@ -20,10 +20,6 @@ class Magic(pygame.sprite.Sprite):
         self.speed = 400
         self.obstacle_sprites = obstacle_sprites
 
-        for i in self.obstacle_sprites:
-            print(i)
-
-
     def import_image(self):
         path = "Images/tools/magic/" + str(int(self.image_frame) + 1) + ".png"
         now_image = pygame.image.load(path).convert_alpha()

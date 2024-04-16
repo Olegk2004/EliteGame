@@ -6,7 +6,8 @@ from timer import Timer
 
 
 class PlanetEnemy(pygame.sprite.Sprite):
-    def __init__(self, target, group, obstacle_sprites, damage_player, pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
+    def __init__(self, target, group, obstacle_sprites, damage_player,
+                 pos=(random.randint(0, SCREEN_HEIGHT), random.randint(0, SCREEN_WIDTH))):
         super().__init__(group)
 
         self.target = target
@@ -90,7 +91,6 @@ class PlanetEnemy(pygame.sprite.Sprite):
             return 255
         else:
             return 0
-
 
     def move(self, dt):
         # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
@@ -179,7 +179,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
         if self.status == "attack":
             self.attack_time = pygame.time.get_ticks()
             self.damage_player(100)
-            #self.direction = self.get_player_distance_direction(self.target)[1]
+            # self.direction = self.get_player_distance_direction(self.target)[1]
         if self.status == "move":
             self.direction = self.get_player_distance_direction(self.target)[1]
         else:

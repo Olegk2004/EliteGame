@@ -78,13 +78,26 @@ class PlanetMap:
 
     def player_attack_logic(self):
         if "attack" in self.planet_player.image_status:
-            collision_sprites = pygame.sprite.spritecollide(self.planet_player, self.monsters_sprites, False)
+            if self.planet_player.selected_tool == "sword":
+                collision_sprites = pygame.sprite.spritecollide(self.planet_player, self.monsters_sprites, False)
+            else:
+                collision_sprites = []
             if collision_sprites:
                 for target in collision_sprites:
                     target.get_damage(self.planet_player)
 
+    def magic_attack_logic(self):
+        if self.magic_sprites:
+            collision_sprites = []
+            for magic_sprite in self.magic_sprites:
+                now_coll_sprites = pygame.sprite.spritecollide(magic_sprite, self.monsters_sprites, False)
+                if now_coll_sprites:
+                    magic_sprite.kill()
+                collision_sprites.extend(now_coll_sprites)
 
-
+            if collision_sprites:
+                for target in collision_sprites:
+                    target.get_damage(self.planet_player)
     def damage_player(self, amount):
         if self.planet_player.vulnerable:
             self.planet_player.hp -= amount
@@ -114,6 +127,7 @@ class PlanetMap:
         self.magic_sprites.update(dt)
 
         self.player_attack_logic()
+        self.magic_attack_logic()
 
         # for overlay in self.enemies_overlays.values():
         # overlay.display()
