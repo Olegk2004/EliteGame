@@ -104,11 +104,8 @@ class PlanetMap:
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
         for sprite in self.monsters_sprites:
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
-        if self.magic_sprites:
-            for sprite in self.magic_sprites:
-                self.display_surface.blit(sprite.image, self.camera.apply(sprite))
-        else:
-            self.planet_player.can_magic = True
+        for sprite in self.magic_sprites:
+            self.display_surface.blit(sprite.image, self.camera.apply(sprite))
 
         self.tiles_sprites.update(dt)
         self.obstacle_sprites.update(dt)

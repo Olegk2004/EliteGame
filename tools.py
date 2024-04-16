@@ -17,7 +17,7 @@ class Magic(pygame.sprite.Sprite):
         self.direction = direction
 
         self.pos = pygame.math.Vector2(self.rect.center)
-        self.speed = 200
+        self.speed = 400
 
         self.obstacle_sprites = obstacle_sprites
 
