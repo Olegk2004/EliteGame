@@ -18,8 +18,10 @@ class Magic(pygame.sprite.Sprite):
 
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 400
-
         self.obstacle_sprites = obstacle_sprites
+
+        for i in self.obstacle_sprites:
+            print(i)
 
 
     def import_image(self):
@@ -32,15 +34,19 @@ class Magic(pygame.sprite.Sprite):
             self.direction = self.direction.normalize()
         self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
         self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
+        self.collision('horizontal')
 
         # перемещение по вертикали
         self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
         self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
+        self.collision('vertical')
 
     def collision(self, direction):
         if direction == 'horizontal':
             for sprite in self.obstacle_sprites:
-                if sprite.rect.colliderect(self.rect):
+                self.hitbox = self.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                sprite_hitbox = sprite.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.width * 0.2)
+                if sprite_hitbox.colliderect(self.hitbox):
                     self.kill()
 
         if direction == 'vertical':
