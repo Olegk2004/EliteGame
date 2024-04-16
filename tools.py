@@ -25,7 +25,6 @@ class Magic(pygame.sprite.Sprite):
     def import_image(self):
         path = "Images/tools/magic/" + str(int(self.image_frame) + 1) + ".png"
         now_image = pygame.image.load(path).convert_alpha()
-        now_image = pygame.transform.scale(now_image, (16, 16))
         return now_image
 
     def move(self, dt):
@@ -53,7 +52,7 @@ class Magic(pygame.sprite.Sprite):
 
     def animate(self, dt):
         self.image_frame += 12 * dt
-        if self.image_frame >= 30:
+        if self.image_frame >= 15:
             self.kill()
         else:
             self.image = self.import_image()

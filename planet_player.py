@@ -30,7 +30,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
 
         # Таймеры
         self.timers = {
-            'tool use': Timer(3, self.use_tool),
+            'attack': Timer(300, self.set_can_attack),
             'tool switch': Timer(200),
             'hit': Timer(500, self.set_fulnerable)
         }
@@ -46,6 +46,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.vulnerable = True
 
         self.can_magic = True
+        self.can_attack = True
 
     def import_image(self):
         path = "Images/Player/" + self.image_status + str(int(self.image_frame) + 1) + ".png"
@@ -97,11 +98,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
 
     def input(self):
         keys = pygame.key.get_pressed()
-        self.statx = 1
-        self.staty = 1
         # Если игрок в процессе использования инструмента,
         # он не может двигаться и сменить инструмент
-        if not self.timers['tool use'].active:
+        if True:
             # Передвижение на WASD
             if keys[pygame.K_w]:
                 self.direction.y = -1
@@ -128,8 +127,8 @@ class PlanetPlayer(pygame.sprite.Sprite):
                 self.image_status = _image_status
 
             # Использование инструмента
-            if keys[pygame.K_p]:
-                self.timers['tool use'].activate()
+            if keys[pygame.K_p] and not self.timers["attack"].active:
+                self.timers['attack'].activate()
                 self.direction = pygame.math.Vector2()
                 self.image_frame = 0
                 if self.selected_tool == "sword":
@@ -138,9 +137,8 @@ class PlanetPlayer(pygame.sprite.Sprite):
                             self.image_status = "down"
                         self.image_status = "attack_" + self.image_status
                         self.image_frame = 0
-                elif self.selected_tool == "magic" and self.can_magic:
+                elif self.selected_tool == "magic":
                     magic_ball = Magic(self.direction, self.pos, self.magic_sprites, self.obstacle_sprites)
-                    self.can_magic = False
 
             # Смена инструмента
             if keys[pygame.K_TAB] and not self.timers['tool switch'].active:
@@ -162,10 +160,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
             else:
                 timer.update()
 
-
-
-    def use_tool(self):
-        pass
+    def set_can_attack(self):
+        self.can_attack = True
+        return 0
 
     def move(self, dt):
         # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
