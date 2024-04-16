@@ -34,6 +34,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
         self.attack_time = None
         self.attack_cooldown = 400
         self.damage_player = damage_player
+        self.die = False
 
         # invincibility timer
         self.vulnerable = True
@@ -60,14 +61,20 @@ class PlanetEnemy(pygame.sprite.Sprite):
             self.vulnerable = False
 
     def check_death(self):
-        if self.hp <= 0:
-            self.kill()
+        if self.hp <= 0 and not self.die:
+            self.image_status = 'die'
+            self.image_frame = 0
+            self.die = True
 
     def hit_reaction(self):
         if not self.vulnerable:
             self.direction *= -3
 
     def animate(self, dt):
+        if self.image_status == "die":
+            if self.image_frame >= 3:
+                self.kill()
+
         self.image_frame += 4 * dt
         if self.image_frame >= 5:  # больше 3, потому что количество спрайтов для анимации равно 3
             if self.status == "atack":
@@ -75,7 +82,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
             self.image_frame = 0
 
         if not self.vulnerable:  # если враг атакован
-            opposite = {"up": "down", "down": "up", "left": "right", "right": "left", "idle": "idle"}
+            opposite = {"up": "down", "down": "up", "left": "right", "right": "left", "idle": "idle", "die": "die"}
             self.image_status = opposite[self.image_status]
 
         self.image = self.import_image()
@@ -85,6 +92,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
         else:
             self.image.set_alpha(255)
 
+
     def wave_value(self):
         value = sin(pygame.time.get_ticks())
         if value >= 0:
@@ -92,41 +100,44 @@ class PlanetEnemy(pygame.sprite.Sprite):
         else:
             return 0
 
+
     def move(self, dt):
-        # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
-        if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
-            self.direction = self.direction.normalize()
+        if not self.die:
+            # Нормализация вектора. Это нужно, чтобы скорость по диагонали была такая же
+            if self.direction.magnitude() > 0:  # если мы куда-то двигаемся то нормализуем
+                self.direction = self.direction.normalize()
 
-        # перемещение по горизонтали
-        self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
-        self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
-        self.collision('horizontal')
+            # перемещение по горизонтали
+            self.pos.x += self.direction.x * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+            self.rect.centerx = self.pos.x  # устанавливаем центр спрайта в текущую позицию игрока
+            self.collision('horizontal')
 
-        # перемещение по вертикали
-        self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
-        self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
-        self.collision('vertical')
+            # перемещение по вертикали
+            self.pos.y += self.direction.y * self.speed * dt  # обновляем позицию игрока в зависимости от направления и скорости
+            self.rect.centery = self.pos.y  # устанавливаем центр спрайта в текущую позицию игрока
+            self.collision('vertical')
 
-        if self.direction.y < 0:
-            _image_status = "up"
-        if self.direction.y > 0:
-            _image_status = "down"
-        else:
-            self.direction.y = 0
+            if self.direction.y < 0:
+                _image_status = "up"
+            if self.direction.y > 0:
+                _image_status = "down"
+            else:
+                self.direction.y = 0
 
-        if self.direction.x < 0:
-            _image_status = "left"
-        elif self.direction.x > 0:
-            self.direction.x = 1
-            _image_status = "right"
-        else:
-            self.direction.x = 0
+            if self.direction.x < 0:
+                _image_status = "left"
+            elif self.direction.x > 0:
+                self.direction.x = 1
+                _image_status = "right"
+            else:
+                self.direction.x = 0
 
-        if self.direction.x == 0 and self.direction.y == 0:  # если остаемся на месте
-            _image_status = "idle"
+            if self.direction.x == 0 and self.direction.y == 0:  # если остаемся на месте
+                _image_status = "idle"
 
-        if not "attack" in self.image_status:
-            self.image_status = _image_status
+            if not "attack" in self.image_status:
+                self.image_status = _image_status
+
 
     def collision(self, direction):
         if direction == 'horizontal':
@@ -153,6 +164,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
                     self.rect.centery = self.hitbox.centery
                     self.pos.y = self.hitbox.centery
 
+
     def get_player_distance_direction(self, player):
         enemy_vec = pygame.math.Vector2(self.rect.center)
         player_vec = pygame.math.Vector2(player.rect.center)
@@ -165,6 +177,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
 
         return (distance, direction)
 
+
     def get_status(self, player):
         distance = self.get_player_distance_direction(player)[0]
 
@@ -175,6 +188,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
         else:
             self.status = "idle"
 
+
     def actions(self, player):
         if self.status == "attack":
             self.attack_time = pygame.time.get_ticks()
@@ -184,6 +198,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
             self.direction = self.get_player_distance_direction(self.target)[1]
         else:
             self.direction = pygame.math.Vector2()
+
 
     def update(self, dt):
         self.get_status(self.target)
