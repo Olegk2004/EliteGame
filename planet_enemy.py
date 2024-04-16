@@ -74,7 +74,7 @@ class PlanetEnemy(pygame.sprite.Sprite):
             self.image_frame = 0
 
         if not self.vulnerable:  # если враг атакован
-            opposite = {"up": "down", "down": "up", "left": "right", "right": "left"}
+            opposite = {"up": "down", "down": "up", "left": "right", "right": "left", "idle": "idle"}
             self.image_status = opposite[self.image_status]
 
         self.image = self.import_image()

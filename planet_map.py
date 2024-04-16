@@ -38,7 +38,7 @@ class PlanetMap:
     def __init__(self, planet):
         self.planet = planet
         self.all_sprites = pygame.sprite.Group()
-        self.bullet_group = pygame.sprite.Group()
+        self.magic_sprites = pygame.sprite.Group()
         self.obstacle_sprites = pygame.sprite.Group()
         self.tiles_sprites = pygame.sprite.Group()
         self.display_surface = pygame.display.get_surface()
@@ -63,7 +63,7 @@ class PlanetMap:
                         tile = Tile(surf, pos[0], pos[1], self.tiles_sprites)
 
         self.planet_player = PlanetPlayer((250, 380), self.all_sprites,
-                                          self.obstacle_sprites)  # теперь в аргументах указываем ещё и позиции осязаемых объектов
+                                          self.obstacle_sprites, self.magic_sprites)  # теперь в аргументах указываем ещё и позиции осязаемых объектов
 
         self.planet_enemies = {}
         self.enemies_overlays = {}
@@ -83,8 +83,9 @@ class PlanetMap:
                 for target in collision_sprites:
                     target.get_damage(self.planet_player)
 
+
+
     def damage_player(self, amount):
-        print(self.planet_player.vulnerable)
         if self.planet_player.vulnerable:
             self.planet_player.hp -= amount
             self.planet_player.vulnerable = False
@@ -103,11 +104,17 @@ class PlanetMap:
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
         for sprite in self.monsters_sprites:
             self.display_surface.blit(sprite.image, self.camera.apply(sprite))
+        if self.magic_sprites:
+            for sprite in self.magic_sprites:
+                self.display_surface.blit(sprite.image, self.camera.apply(sprite))
+        else:
+            self.planet_player.can_magic = True
 
         self.tiles_sprites.update(dt)
         self.obstacle_sprites.update(dt)
         self.all_sprites.update(dt)
         self.monsters_sprites.update(dt)
+        self.magic_sprites.update(dt)
 
         self.player_attack_logic()
 

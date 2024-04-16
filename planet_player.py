@@ -2,10 +2,11 @@ import pygame
 from settings import *
 from timer import Timer
 from math import sin
+from tools import Magic
 
 
 class PlanetPlayer(pygame.sprite.Sprite):
-    def __init__(self, pos, group, obstacle_sprites):
+    def __init__(self, pos, group, obstacle_sprites, magic_sprites):
         super().__init__(group)
 
         self.image_status = "idle"  # для определения какого направления спрайт вставлять
@@ -25,17 +26,17 @@ class PlanetPlayer(pygame.sprite.Sprite):
         self.stamina = 500
 
         self.obstacle_sprites = obstacle_sprites
+        self.magic_sprites = magic_sprites
 
         # Таймеры
         self.timers = {
             'tool use': Timer(3, self.use_tool),
             'tool switch': Timer(200),
             'hit': Timer(500, self.set_fulnerable)
-
         }
 
         # Инструменты
-        self.tools = ['hand', 'sword', 'gun']
+        self.tools = ['hand', 'sword', 'magic']
         self.tools_sprites = {}
         self.import_tools_sprites()
         self.tool_index = 0
@@ -43,6 +44,8 @@ class PlanetPlayer(pygame.sprite.Sprite):
 
         # damage timer
         self.vulnerable = True
+
+        self.can_magic = True
 
     def import_image(self):
         path = "Images/Player/" + self.image_status + str(int(self.image_frame) + 1) + ".png"
@@ -60,7 +63,7 @@ class PlanetPlayer(pygame.sprite.Sprite):
                 if tool == 'hand':
                     tool_sprite = pygame.surface.Surface((50, 50))
                     tool_sprite.fill('green')
-                if tool == 'gun':
+                if tool == 'magic':
                     tool_sprite = pygame.surface.Surface((50, 50))
                     tool_sprite.fill('pink')
             self.tools_sprites[tool] = tool_sprite
@@ -135,6 +138,9 @@ class PlanetPlayer(pygame.sprite.Sprite):
                             self.image_status = "down"
                         self.image_status = "attack_" + self.image_status
                         self.image_frame = 0
+                elif self.selected_tool == "magic" and self.can_magic:
+                    magic_ball = Magic(self.direction, self.pos, self.magic_sprites, self.obstacle_sprites)
+                    self.can_magic = False
 
             # Смена инструмента
             if keys[pygame.K_TAB] and not self.timers['tool switch'].active:
